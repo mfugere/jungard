@@ -1,0 +1,7 @@
+$ cat .gitignore
+.idea
+
+.DS_Store
+
+lib/*
+!lib/phaser.min.js
