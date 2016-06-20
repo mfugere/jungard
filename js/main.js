@@ -2,51 +2,151 @@
 
 var map = [
     {
-        id: 0,
-        area: "Home",
+        ref: "home",
+        group: "Home",
         description: "Welcome to the world! The sky is blue and the grass is green.",
-        paths: [ 1, 2 ]
+        actions: [
+            {
+                ref: "grassland",
+                description: "Go east"
+            },
+            {
+                ref: "forestedge",
+                description: "Go southeast"
+            }
+        ]
     },
     {
-        id: 1,
-        area: "Grassland",
+        ref: "grassland",
+        group: "Grassland",
         description: "Wow this place is boring. There isn't much to this place.",
-        paths: [ 0, 2, 3 ]
+        actions: [
+            {
+                ref: "home",
+                description: "Go west"
+            },
+            {
+                ref: "forestedge",
+                description: "Go south"
+            },
+            {
+                ref: "forest",
+                description: "Go east"
+            }
+        ]
     },
     {
-        id: 2,
-        area: "Forest Edge",
+        ref: "forestedge",
+        group: "Forest Edge",
         description: "You're finding your way around. This zone has some nice trees.",
-        paths: [ 0, 1, 3 ]
+        actions: [
+            {
+                ref: "home",
+                description: "Go northwest"
+            },
+            {
+                ref: "grassland",
+                description: "Go north"
+            },
+            {
+                ref: "forest",
+                description: "Go northeast"
+            }
+        ]
     },
     {
-        id: 3,
-        area: "Forest",
+        ref: "forest",
+        group: "Forest",
         description: "You find yourself in a forest. It's dark and spooky.",
-        paths: [ 1, 2 ]
+        actions: [
+            {
+                ref: "grassland",
+                description: "Go west"
+            },
+            {
+                ref: "forestedge",
+                description: "Go southwest"
+            }
+        ]
     }
 ];
 
-var Play = React.createClass({
-    getInitialState: function () {
-        return { zone: this.props.zones[0] };
+var getMemberByRef = function (array, ref) {
+    for (var i in array) {
+        if (array[i].ref === ref) return array[i];
+    }
+};
+
+var Header = React.createClass({
+    render: function () {
+        return (
+            <div>
+                <div>
+                    <button>Game</button>
+                    <button>Player</button>
+                    <button>Inventory</button>
+                    <button>Map</button>
+                    <button>Help</button>
+                    <button>About</button>
+                </div>
+                <div>
+                    <h1>{this.props.context.group}</h1>
+                    <p>{this.props.context.description}</p>
+                </div>
+            </div>
+        );
+    }
+});
+
+var Actions = React.createClass({
+    handleAction: function (ref) {
+        this.props.onAction(ref);
     },
-    onNextZone: function () {
-        var nextZone = this.props.zones[this.state.zone.id + 1];
-        if (nextZone) this.setState({ zone: this.props.zones[this.state.zone.id + 1]});
+    render: function () {
+        var buttons = [];
+        this.props.context.actions.forEach(function (action) {
+            buttons.push(<button onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
+        }.bind(this));
+        return (
+            <div>{buttons}</div>
+        );
+    }
+});
+
+var Footer = React.createClass({
+    render: function () {
+        return (
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">Copyright 2016 Matt Fugere. All rights reserved.</div>
+                </div>
+            </div>
+        );
+    }
+});
+
+var Game = React.createClass({
+    getInitialState: function () {
+        return {
+            map: this.props.map,
+            current: this.props.map[0].ref
+        };
+    },
+    doAction: function (ref) {
+        this.setState({ current: ref });
     },
     render: function () {
         return (
-            <div className="play">
-                <h3>{this.state.zone.area}</h3>
-                <p>{this.state.zone.description}</p>
-                <button onClick={this.onNextZone}>Next Zone</button>
+            <div class="container">
+                <Header context={getMemberByRef(this.props.map, this.state.current)} />
+                <Actions context={getMemberByRef(this.props.map, this.state.current)} onAction={this.doAction} />
+                <Footer />
             </div>
         );
     }
 });
 
 ReactDOM.render(
-    <Play zones={map} />,
-    document.getElementById("container")
+    <Game map={map} />,
+    document.getElementById("game")
 );
