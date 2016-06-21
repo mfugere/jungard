@@ -1,5 +1,35 @@
 "use strict";
 
+var actors = [
+    {
+        ref: "jim",
+        group: "Jim",
+        description: "You see a man. He says his name is Jim.",
+        dialog: [
+            {
+                ref: "hi",
+                description: "Hey buddy, what's your favorite color?",
+                type: "intro"
+            }
+        ],
+        actions: [
+            {
+                ref: "home",
+                description: "Blue!",
+                type: "map"
+            },
+            {
+                ref: "grassland",
+                description: "Red!",
+                type: "map"
+            }
+        ]
+    }
+];
+
+var objects = [
+];
+
 var map = [
     {
         ref: "home",
@@ -8,11 +38,13 @@ var map = [
         actions: [
             {
                 ref: "grassland",
-                description: "Go east"
+                description: "Go east",
+                type: "map"
             },
             {
                 ref: "forestedge",
-                description: "Go southeast"
+                description: "Go southeast",
+                type: "map"
             }
         ]
     },
@@ -23,15 +55,18 @@ var map = [
         actions: [
             {
                 ref: "home",
-                description: "Go west"
+                description: "Go west",
+                type: "map"
             },
             {
                 ref: "forestedge",
-                description: "Go south"
+                description: "Go south",
+                type: "map"
             },
             {
                 ref: "forest",
-                description: "Go east"
+                description: "Go east",
+                type: "map"
             }
         ]
     },
@@ -42,15 +77,18 @@ var map = [
         actions: [
             {
                 ref: "home",
-                description: "Go northwest"
+                description: "Go northwest",
+                type: "map"
             },
             {
                 ref: "grassland",
-                description: "Go north"
+                description: "Go north",
+                type: "map"
             },
             {
                 ref: "forest",
-                description: "Go northeast"
+                description: "Go northeast",
+                type: "map"
             }
         ]
     },
@@ -61,24 +99,43 @@ var map = [
         actions: [
             {
                 ref: "grassland",
-                description: "Go west"
+                description: "Go west",
+                type: "map"
             },
             {
                 ref: "forestedge",
-                description: "Go southwest"
+                description: "Go southwest",
+                type: "map"
+            },
+            {
+                ref: "jim",
+                description: "Talk to Jim",
+                type: "actors"
             }
         ]
     }
 ];
 
 var getMemberByRef = function (array, ref) {
-    for (var i in array) {
-        if (array[i].ref === ref) return array[i];
+    var entities = {
+        map: map,
+        actors: actors
+    };
+    var a = entities[array]
+    for (var i in a) {
+        if (a[i].ref === ref) return a[i];
     }
 };
 
 var Header = React.createClass({
     render: function () {
+        var description = [ <p key={this.props.context.ref}>{this.props.context.description}</p> ];
+        this.props.context.actions.forEach(function (action) {
+            if (action.type === "actors") description.push(<p key={action.ref}>{getMemberByRef("actors", action.ref).description}</p>);
+        }, description);
+        if (this.props.context.dialog) {
+            description.push(<p key={this.props.context.dialog[0].ref}>They say &quot;{this.props.context.dialog[0].description}&quot;</p>);
+        }
         return (
             <div>
                 <div>
@@ -91,7 +148,7 @@ var Header = React.createClass({
                 </div>
                 <div>
                     <h1>{this.props.context.group}</h1>
-                    <p>{this.props.context.description}</p>
+                    <div>{description}</div>
                 </div>
             </div>
         );
@@ -99,14 +156,14 @@ var Header = React.createClass({
 });
 
 var Actions = React.createClass({
-    handleAction: function (ref) {
-        this.props.onAction(ref);
+    handleAction: function (ref, type) {
+        this.props.onAction(ref, type);
     },
     render: function () {
         var buttons = [];
         this.props.context.actions.forEach(function (action) {
-            buttons.push(<button onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
-        }.bind(this));
+            buttons.push(<button key={action.ref} onClick={this.handleAction.bind(this, action.ref, action.type)}>{action.description}</button>);
+        }, this);
         return (
             <div>{buttons}</div>
         );
@@ -129,17 +186,22 @@ var Game = React.createClass({
     getInitialState: function () {
         return {
             map: this.props.map,
-            current: this.props.map[0].ref
+            actors: this.props.actors,
+            current: { ref: this.props.map[0].ref, type: "map" }
         };
     },
-    doAction: function (ref) {
-        this.setState({ current: ref });
+    doAction: function (ref, type) {
+        this.setState({
+            map: this.props.map,
+            actors: this.props.actors,
+            current: { ref: ref, type: type }
+        });
     },
     render: function () {
         return (
             <div class="container">
-                <Header context={getMemberByRef(this.props.map, this.state.current)} />
-                <Actions context={getMemberByRef(this.props.map, this.state.current)} onAction={this.doAction} />
+                <Header context={getMemberByRef(this.state.current.type, this.state.current.ref)} />
+                <Actions context={getMemberByRef(this.state.current.type, this.state.current.ref)} onAction={this.doAction} />
                 <Footer />
             </div>
         );
@@ -147,6 +209,6 @@ var Game = React.createClass({
 });
 
 ReactDOM.render(
-    <Game map={map} />,
+    <Game map={map} actors={actors} />,
     document.getElementById("game")
 );
