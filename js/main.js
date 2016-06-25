@@ -2,26 +2,24 @@
 
 var actors = [
     {
-        ref: "jim",
+        ref: "actors/jim",
         group: "Jim",
-        description: "You see a man. He says his name is Jim.",
+        description: "You see a man. He's wearing a baseball cap and has a wooden leg.",
+        location: "map/forest",
         dialog: [
             {
-                ref: "hi",
-                description: "Hey buddy, what's your favorite color?",
-                type: "intro"
+                key: "intro",
+                value: "Hey buddy, my name is Jim!"
             }
         ],
         actions: [
             {
-                ref: "home",
-                description: "Blue!",
-                type: "map"
+                ref: "actors/jim/dialog/intro",
+                description: "Introduce yourself!"
             },
             {
-                ref: "grassland",
-                description: "Red!",
-                type: "map"
+                ref: "..",
+                description: "Walk away"
             }
         ]
     }
@@ -32,98 +30,90 @@ var objects = [
 
 var map = [
     {
-        ref: "home",
+        ref: "map/home",
         group: "Home",
         description: "Welcome to the world! The sky is blue and the grass is green.",
         actions: [
             {
-                ref: "grassland",
-                description: "Go east",
-                type: "map"
+                ref: "map/grassland",
+                description: "Go east"
             },
             {
-                ref: "forestedge",
-                description: "Go southeast",
-                type: "map"
+                ref: "map/forestedge",
+                description: "Go southeast"
             }
         ]
     },
     {
-        ref: "grassland",
+        ref: "map/grassland",
         group: "Grassland",
         description: "Wow this place is boring. There isn't much to this place.",
         actions: [
             {
-                ref: "home",
-                description: "Go west",
-                type: "map"
+                ref: "map/home",
+                description: "Go west"
             },
             {
-                ref: "forestedge",
-                description: "Go south",
-                type: "map"
+                ref: "map/forestedge",
+                description: "Go south"
             },
             {
-                ref: "forest",
-                description: "Go east",
-                type: "map"
+                ref: "map/forest",
+                description: "Go east"
             }
         ]
     },
     {
-        ref: "forestedge",
+        ref: "map/forestedge",
         group: "Forest Edge",
         description: "You're finding your way around. This zone has some nice trees.",
         actions: [
             {
-                ref: "home",
-                description: "Go northwest",
-                type: "map"
+                ref: "map/home",
+                description: "Go northwest"
             },
             {
-                ref: "grassland",
-                description: "Go north",
-                type: "map"
+                ref: "map/grassland",
+                description: "Go north"
             },
             {
-                ref: "forest",
-                description: "Go northeast",
-                type: "map"
+                ref: "map/forest",
+                description: "Go northeast"
             }
         ]
     },
     {
-        ref: "forest",
+        ref: "map/forest",
         group: "Forest",
         description: "You find yourself in a forest. It's dark and spooky.",
         actions: [
             {
-                ref: "grassland",
-                description: "Go west",
-                type: "map"
+                ref: "map/grassland",
+                description: "Go west"
             },
             {
-                ref: "forestedge",
-                description: "Go southwest",
-                type: "map"
+                ref: "map/forestedge",
+                description: "Go southwest"
             },
             {
-                ref: "jim",
-                description: "Talk to Jim",
-                type: "actors"
+                ref: "actors/jim",
+                preview: "You see a man.",
+                description: "Approach man"
             }
         ]
     }
 ];
 
-var getMemberByRef = function (array, ref) {
+var getMemberByRef = function (ref) {
     var entities = {
         map: map,
         actors: actors
     };
-    var a = entities[array]
-    for (var i in a) {
-        if (a[i].ref === ref) return a[i];
+    console.log(ref);
+    var array = ref.split("/");
+    var entity = entities[array[0]];
+    for (var i in entity) {
+        if (entity[i].ref === ref) return entity[i];
     }
 };
 
@@ -131,10 +121,19 @@ var Header = React.createClass({
     render: function () {
         var description = [ <p key={this.props.context.ref}>{this.props.context.description}</p> ];
         this.props.context.actions.forEach(function (action) {
-            if (action.type === "actors") description.push(<p key={action.ref}>{getMemberByRef("actors", action.ref).description}</p>);
+            if (action.preview) description.push(<p key={action.ref + "/preview"}>{action.preview}</p>);
         }, description);
-        if (this.props.context.dialog) {
-            description.push(<p key={this.props.context.dialog[0].ref}>They say &quot;{this.props.context.dialog[0].description}&quot;</p>);
+        if (this.props.extras.length > 0) {
+            var extras = this.props.extras.split(",");
+            for (var i in extras) {
+                var extra = extras[i].split("/");
+                var prop = this.props.context[extra[0]];
+                for (var j in prop) {
+                    if (prop[j].key === extra[1]) {
+                        description.push(<p key={extras[i] + i}>{prop[j].value}</p>);
+                    }
+                }
+            }
         }
         return (
             <div>
@@ -156,13 +155,15 @@ var Header = React.createClass({
 });
 
 var Actions = React.createClass({
-    handleAction: function (ref, type) {
-        this.props.onAction(ref, type);
+    handleAction: function (ref) {
+        if (ref === "..") ref = this.props.context.location;
+        if (ref.indexOf(this.props.context.ref) !== -1) this.props.showExtra(ref);
+        else this.props.onAction(ref);
     },
     render: function () {
         var buttons = [];
         this.props.context.actions.forEach(function (action) {
-            buttons.push(<button key={action.ref} onClick={this.handleAction.bind(this, action.ref, action.type)}>{action.description}</button>);
+            buttons.push(<button key={action.ref} onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
         }, this);
         return (
             <div>{buttons}</div>
@@ -185,23 +186,24 @@ var Footer = React.createClass({
 var Game = React.createClass({
     getInitialState: function () {
         return {
-            map: this.props.map,
-            actors: this.props.actors,
-            current: { ref: this.props.map[0].ref, type: "map" }
+            current: this.props.map[0].ref,
+            extras: ""
         };
     },
-    doAction: function (ref, type) {
-        this.setState({
-            map: this.props.map,
-            actors: this.props.actors,
-            current: { ref: ref, type: type }
-        });
+    doAction: function (ref) {
+        this.setState({ current: ref, extras: "" });
+    },
+    addExtra: function (ref) {
+        var extras = this.state.extras.split(",");
+        var extra = ref.replace(this.state.current, "");
+        extras.push(extra.substring(1));
+        this.setState({ extras: extras.join() });
     },
     render: function () {
         return (
             <div class="container">
-                <Header context={getMemberByRef(this.state.current.type, this.state.current.ref)} />
-                <Actions context={getMemberByRef(this.state.current.type, this.state.current.ref)} onAction={this.doAction} />
+                <Header context={getMemberByRef(this.state.current)} extras={this.state.extras} />
+                <Actions context={getMemberByRef(this.state.current)} onAction={this.doAction} showExtra={this.addExtra} />
                 <Footer />
             </div>
         );
