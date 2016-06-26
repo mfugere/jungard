@@ -1,5 +1,11 @@
 "use strict";
 
+var player = {
+    hp: 20,
+    att: 4,
+    ac: 5
+};
+
 var actors = [
     {
         ref: "actors/jim",
@@ -22,10 +28,54 @@ var actors = [
                 description: "Walk away"
             }
         ]
+    },
+    {
+        ref: "actors/spider",
+        group: "Spider",
+        description: "A spider is crawling about.",
+        location: "map/deepforest",
+        battle: {
+            hp: 10,
+            att: 2,
+            ac: 3
+        },
+        actions: [
+            {
+                ref: "actors/spider/battle",
+                description: "Fight!"
+            },
+            {
+                ref: "..",
+                description: "Walk away"
+            }
+        ]
     }
 ];
 
-var objects = [
+var battleActions = [
+    {
+        ref: "battle/attack",
+        description: "Attack",
+        key: "attack",
+        value: "You hit the {0} and do {1} points of damage."
+    },
+    {
+        ref: "battle/defend",
+        description: "Defend",
+        key: "defend",
+        value: "You hunker down."
+    },
+    {
+        ref: "battle/flee",
+        description: "Flee",
+        key: "flee",
+        value: "You run away!"
+    },
+    {
+        ref: "battle/win",
+        key: "win",
+        value: "You defeated the {0}!"
+    }
 ];
 
 var map = [
@@ -96,9 +146,29 @@ var map = [
                 description: "Go southwest"
             },
             {
+                ref: "map/deepforest",
+                description: "Go east"
+            },
+            {
                 ref: "actors/jim",
                 preview: "You see a man.",
                 description: "Approach man"
+            }
+        ]
+    },
+    {
+        ref: "map/deepforest",
+        group: "Deep Forest",
+        description: "You're now in a dark part of the forest. It's darker and spookier.",
+        actions: [
+            {
+                ref: "map/forest",
+                description: "Go west"
+            },
+            {
+                ref: "actors/spider",
+                preview: "You see a large spider.",
+                description: "Approach spider"
             }
         ]
     }
@@ -107,14 +177,21 @@ var map = [
 var getMemberByRef = function (ref) {
     var entities = {
         map: map,
-        actors: actors
+        actors: actors,
+        battle: battleActions
     };
-    console.log(ref);
     var array = ref.split("/");
     var entity = entities[array[0]];
     for (var i in entity) {
         if (entity[i].ref === ref) return entity[i];
     }
+};
+
+var interpolate = function (string, values) {
+    for (var i = 0; i < values.length; i++) {
+        string = string.replace("{" + i + "}", values[i]);
+    }
+    return string;
 };
 
 var Header = React.createClass({
@@ -127,10 +204,12 @@ var Header = React.createClass({
             var extras = this.props.extras.split(",");
             for (var i in extras) {
                 var extra = extras[i].split("/");
-                var prop = this.props.context[extra[0]];
+                var prop = (extra[0] === "battle") ? this.props.battleActions : this.props.context[extra[0]];
                 for (var j in prop) {
                     if (prop[j].key === extra[1]) {
-                        description.push(<p key={extras[i] + i}>{prop[j].value}</p>);
+                        var value = (extra[0] === "battle" && extra[2])
+                            ? interpolate(prop[j].value, extra[2].split("&")) : prop[j].value;
+                        description.push(<p key={extras[i] + i}>{value}</p>);
                     }
                 }
             }
@@ -157,13 +236,16 @@ var Header = React.createClass({
 var Actions = React.createClass({
     handleAction: function (ref) {
         if (ref === "..") ref = this.props.context.location;
-        if (ref.indexOf(this.props.context.ref) !== -1) this.props.showExtra(ref);
+        if (ref.indexOf(this.props.context.ref) !== -1) {
+            if (ref.indexOf("battle") !== -1) this.props.battle();
+            else this.props.showExtra(ref);
+        }
         else this.props.onAction(ref);
     },
     render: function () {
         var buttons = [];
-        this.props.context.actions.forEach(function (action) {
-            buttons.push(<button key={action.ref} onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
+        this.props.actions.forEach(function (action) {
+            if (action.description) buttons.push(<button key={action.ref} onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
         }, this);
         return (
             <div>{buttons}</div>
@@ -187,23 +269,58 @@ var Game = React.createClass({
     getInitialState: function () {
         return {
             current: this.props.map[0].ref,
-            extras: ""
+            extras: "",
+            battling: false
         };
     },
     doAction: function (ref) {
-        this.setState({ current: ref, extras: "" });
+        if (this.state.battling) {
+            switch (ref) {
+                case "battle/attack":
+                    var target = getMemberByRef(this.state.current);
+                    target.battle.hp -= this.props.player.att;
+                    this.addExtra(ref + "/" + target.group + "&" + this.props.player.att);
+                    if (target.battle.hp <= 0) {
+                        this.setState({ current: target.location, extras: "battle/win/" + target.group, battling: false });
+                        this.kill(this.state.current);
+                    }
+                    break;
+                case "battle/defend":
+                    this.addExtra(ref);
+                    break;
+                case "battle/flee":
+                    var targetLocation = getMemberByRef(this.state.current).location;
+                    this.setState({ current: targetLocation, extras: ref, battling: false });
+                    break;
+                default:
+                    break;
+            }
+        }
+        else this.setState({ current: ref, extras: "" });
+    },
+    kill: function (ref) {
+        for (var i in this.props.map) {
+            var actions = this.props.map[i].actions;
+            for (var j in actions) {
+                if (actions[j].ref === ref) delete actions[j];
+            }
+        }
     },
     addExtra: function (ref) {
         var extras = this.state.extras.split(",");
-        var extra = ref.replace(this.state.current, "");
-        extras.push(extra.substring(1));
+        var extra = (ref.indexOf(this.state.current) !== -1) ? ref.replace(this.state.current, "").substring(1) : ref;
+        extras.push(extra);
         this.setState({ extras: extras.join() });
     },
+    battle: function () {
+        this.setState({ battling: !this.state.battling });
+    },
     render: function () {
+        var actions = (this.state.battling) ? this.props.battleActions : getMemberByRef(this.state.current).actions;
         return (
             <div class="container">
-                <Header context={getMemberByRef(this.state.current)} extras={this.state.extras} />
-                <Actions context={getMemberByRef(this.state.current)} onAction={this.doAction} showExtra={this.addExtra} />
+                <Header context={getMemberByRef(this.state.current)} extras={this.state.extras} battleActions={this.props.battleActions} />
+                <Actions context={getMemberByRef(this.state.current)} actions={actions} onAction={this.doAction} showExtra={this.addExtra} battle={this.battle} />
                 <Footer />
             </div>
         );
@@ -211,6 +328,6 @@ var Game = React.createClass({
 });
 
 ReactDOM.render(
-    <Game map={map} actors={actors} />,
+    <Game player={player} map={map} actors={actors} battleActions={battleActions} />,
     document.getElementById("game")
 );
