@@ -2,7 +2,7 @@
 
 var player = {
     hp: 20,
-    att: 4,
+    att: 8,
     ac: 5
 };
 
@@ -36,7 +36,7 @@ var actors = [
         location: "map/deepforest",
         battle: {
             hp: 10,
-            att: 2,
+            att: 6,
             ac: 3
         },
         actions: [
@@ -70,6 +70,11 @@ var battleActions = [
         description: "Flee",
         key: "flee",
         value: "You run away!"
+    },
+    {
+        ref: "battle/hit",
+        key: "hit",
+        value: "The {0} hit you for {1} points of damage."
     },
     {
         ref: "battle/win",
@@ -174,16 +179,9 @@ var map = [
     }
 ];
 
-var getMemberByRef = function (ref) {
-    var entities = {
-        map: map,
-        actors: actors,
-        battle: battleActions
-    };
-    var array = ref.split("/");
-    var entity = entities[array[0]];
-    for (var i in entity) {
-        if (entity[i].ref === ref) return entity[i];
+var getMemberByRef = function (array, ref) {
+    for (var i in array) {
+        if (array[i].ref === ref) return array[i];
     }
 };
 
@@ -194,39 +192,41 @@ var interpolate = function (string, values) {
     return string;
 };
 
+var MenuBar = React.createClass({
+    render: function () {
+        return (
+            <div>
+                <button>Game</button>
+                <button>Player</button>
+                <button>Inventory</button>
+                <button>Map</button>
+                <button>Help</button>
+                <button>About</button>
+            </div>
+        );
+    }
+});
+
 var Header = React.createClass({
     render: function () {
-        var description = [ <p key={this.props.context.ref}>{this.props.context.description}</p> ];
+        var previews = [];
         this.props.context.actions.forEach(function (action) {
-            if (action.preview) description.push(<p key={action.ref + "/preview"}>{action.preview}</p>);
-        }, description);
-        if (this.props.extras.length > 0) {
-            var extras = this.props.extras.split(",");
-            for (var i in extras) {
-                var extra = extras[i].split("/");
-                var prop = (extra[0] === "battle") ? this.props.battleActions : this.props.context[extra[0]];
-                for (var j in prop) {
-                    if (prop[j].key === extra[1]) {
-                        var value = (extra[0] === "battle" && extra[2])
-                            ? interpolate(prop[j].value, extra[2].split("&")) : prop[j].value;
-                        description.push(<p key={extras[i] + i}>{value}</p>);
-                    }
-                }
+            if (action.preview) previews.push(<p key={action.ref + "/preview"}>{action.preview}</p>);
+        }, previews);
+        var messages = [];
+        if (this.props.messages.length > 0) {
+            for (var i in this.props.messages) {
+                messages.push(<p key={"message" + i}>{this.props.messages[i]}</p>);
             }
         }
         return (
             <div>
-                <div>
-                    <button>Game</button>
-                    <button>Player</button>
-                    <button>Inventory</button>
-                    <button>Map</button>
-                    <button>Help</button>
-                    <button>About</button>
-                </div>
+                <MenuBar />
                 <div>
                     <h1>{this.props.context.group}</h1>
-                    <div>{description}</div>
+                    <p>{this.props.context.description}</p>
+                    <div>{previews}</div>
+                    <div>{messages}</div>
                 </div>
             </div>
         );
@@ -238,7 +238,11 @@ var Actions = React.createClass({
         if (ref === "..") ref = this.props.context.location;
         if (ref.indexOf(this.props.context.ref) !== -1) {
             if (ref.indexOf("battle") !== -1) this.props.battle();
-            else this.props.showExtra(ref);
+            else {
+                var message = ref.replace(this.props.context.ref, "").substring(1);
+                var messageSet = message.split("/");
+                this.props.showMessage(messageSet[0], messageSet[messageSet.length - 1]);
+            }
         }
         else this.props.onAction(ref);
     },
@@ -268,59 +272,100 @@ var Footer = React.createClass({
 var Game = React.createClass({
     getInitialState: function () {
         return {
-            current: this.props.map[0].ref,
-            extras: "",
+            map: this.props.entities.map,
+            actors: this.props.entities.actors,
+            current: this.props.entities.map[0],
+            messages: [],
             battling: false
         };
     },
     doAction: function (ref) {
         if (this.state.battling) {
+            var messages = [];
+            var actionMessage;
+            var actors = this.state.actors;
+            var target = getMemberByRef(actors, this.state.current.ref);
+            for (var i in this.props.entities.battle) {
+                if (this.props.entities.battle[i].ref === ref) {
+                    actionMessage = this.props.entities.battle[i].value
+                }
+            }
             switch (ref) {
                 case "battle/attack":
-                    var target = getMemberByRef(this.state.current);
-                    target.battle.hp -= this.props.player.att;
-                    this.addExtra(ref + "/" + target.group + "&" + this.props.player.att);
+                    var enemyDamage = this.props.entities.player.att - target.battle.ac;
+                    target.battle.hp -= enemyDamage;
+                    this.setState({ actors: actors });
+                    messages.push(interpolate(actionMessage, [ target.group, enemyDamage]));
                     if (target.battle.hp <= 0) {
-                        this.setState({ current: target.location, extras: "battle/win/" + target.group, battling: false });
-                        this.kill(this.state.current);
+                        this.doAction("battle/win");
                     }
                     break;
                 case "battle/defend":
-                    this.addExtra(ref);
+                    messages.push(actionMessage);
                     break;
                 case "battle/flee":
-                    var targetLocation = getMemberByRef(this.state.current).location;
-                    this.setState({ current: targetLocation, extras: ref, battling: false });
+                    this.setState({ current: getMemberByRef(this.state.map, target.location), messages: [ actionMessage ], battling: false });
+                    messages.push(actionMessage);
+                    break;
+                case "battle/win":
+                    this.setState({ current: getMemberByRef(this.state.map, target.location), battling: false });
+                    messages.push(interpolate(actionMessage, [ target.group ]));
+                    this.kill(this.state.current.ref);
+                    break;
+                case "battle/hit":
+                    var playerAc = this.props.entities.player.ac;
+                    var playerDamage = target.battle.att - playerAc; // TODO: check for < 0
+                    this.props.entities.player.hp -= playerDamage;
+                    messages.push(interpolate(actionMessage, [ target.group, playerDamage ]));
                     break;
                 default:
                     break;
             }
+            if (this.state.battling && ref !== "battle/hit") {
+                this.doAction("battle/hit");
+            }
+            this.addMessages(messages);
         }
-        else this.setState({ current: ref, extras: "" });
+        else {
+            var splitRef = ref.split("/");
+            var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
+            this.setState({ current: next, messages: [] });
+        }
     },
     kill: function (ref) {
-        for (var i in this.props.map) {
-            var actions = this.props.map[i].actions;
+        var map = this.props.entities.map;
+        for (var i in map) {
+            var actions = map[i].actions;
             for (var j in actions) {
                 if (actions[j].ref === ref) delete actions[j];
+                this.setState({ map: map });
             }
         }
     },
-    addExtra: function (ref) {
-        var extras = this.state.extras.split(",");
-        var extra = (ref.indexOf(this.state.current) !== -1) ? ref.replace(this.state.current, "").substring(1) : ref;
-        extras.push(extra);
-        this.setState({ extras: extras.join() });
+    showMessage: function (table, key, values) {
+        var property = this.state.current[table];
+        for (var i in property) {
+            if (property[i].key === key) {
+                if (values !== undefined) addMessages([ interpolate(property[i].value, values) ]);
+                else this.addMessages([ property[i].value ]);
+            }
+        }
+    },
+    addMessages: function (messages) {
+        this.setState(function(prev, props) {
+            var newMessages = prev.messages.concat(messages);
+            return { messages: newMessages };
+        });
     },
     battle: function () {
         this.setState({ battling: !this.state.battling });
     },
     render: function () {
-        var actions = (this.state.battling) ? this.props.battleActions : getMemberByRef(this.state.current).actions;
+        var actions = (this.state.battling) ? this.props.entities.battle : this.state.current.actions;
         return (
-            <div class="container">
-                <Header context={getMemberByRef(this.state.current)} extras={this.state.extras} battleActions={this.props.battleActions} />
-                <Actions context={getMemberByRef(this.state.current)} actions={actions} onAction={this.doAction} showExtra={this.addExtra} battle={this.battle} />
+            <div>
+                <Header context={this.state.current} messages={this.state.messages} />
+                <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} />
                 <Footer />
             </div>
         );
@@ -328,6 +373,6 @@ var Game = React.createClass({
 });
 
 ReactDOM.render(
-    <Game player={player} map={map} actors={actors} battleActions={battleActions} />,
+    <Game entities={{ player: player, battle: battleActions, actors: actors, map: map }} />,
     document.getElementById("game")
 );
