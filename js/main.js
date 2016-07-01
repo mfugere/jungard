@@ -177,6 +177,17 @@ var map = [
                 description: "Approach spider"
             }
         ]
+    },
+    {
+        ref: "map/death",
+        group: "You died!",
+        description: "Your eyelids draw shut as you gasp for your last breath of air. Remember that death is not the end, but only a transition.",
+        actions: [
+            {
+                ref: "options/newgame",
+                description: "Start a new game"
+            }
+        ]
     }
 ];
 
@@ -311,8 +322,17 @@ var Game = React.createClass({
                 this.addMessages([ interpolate(this.props.entities.battle[i].value, [ enemy.group, hitStatus ]) ]);
             }
         }
+        if (player.hp <= 0) {
+            this.setState({ battling: false }, function () {
+                this.doAction("map/death");
+            });
+        }
     },
     doAction: function (ref) {
+        if (ref === "options/newgame") {
+            this.setState(this.getInitialState());
+            return;
+        }
         var nextAction;
         if (this.state.battling) {
             var messages = [];
