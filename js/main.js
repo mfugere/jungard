@@ -1,9 +1,14 @@
 "use strict";
 
+var levelUpExp = 100;
+
 var player = {
     hp: 20,
     str: 6,
     ac: 15,
+    init: 2,
+    level: 1,
+    exp: 0,
     activeEffects: {}
 };
 
@@ -38,7 +43,9 @@ var actors = [
         battle: {
             hp: 10,
             str: 4,
-            ac: 10
+            ac: 10,
+            init: 1,
+            exp: 100
         },
         actions: [
             {
@@ -58,7 +65,7 @@ var battleActions = [
         ref: "battle/attack",
         description: "Attack",
         key: "attack",
-        value: "You attack the {0} and {1}."
+        value: "You attack the {0} and {1}"
     },
     {
         ref: "battle/defend",
@@ -75,12 +82,12 @@ var battleActions = [
     {
         ref: "battle/hit",
         key: "hit",
-        value: "The {0} attacks you and {1}."
+        value: "The {0} attacks you and {1}"
     },
     {
         ref: "battle/win",
         key: "win",
-        value: "You defeated the {0}!"
+        value: "You defeated the {0}! You obtained {1} experience points."
     }
 ];
 
@@ -338,7 +345,7 @@ var Game = React.createClass({
             var messages = [];
             var actionMessage;
             var actors = this.state.actors;
-            var target = getMemberByRef(actors, this.state.current.ref);
+            var target = this.state.current;
             for (var i in this.props.entities.battle) {
                 if (this.props.entities.battle[i].ref === ref) {
                     actionMessage = this.props.entities.battle[i].value
@@ -371,8 +378,15 @@ var Game = React.createClass({
                     messages.push(actionMessage);
                     break;
                 case "battle/win":
+                    var player = this.state.player;
+                    player.exp += target.battle.exp;
                     this.setState({ current: getMemberByRef(this.state.map, target.location), battling: false });
-                    messages.push(interpolate(actionMessage, [ target.group ]));
+                    messages.push(interpolate(actionMessage, [ target.group, target.battle.exp ]));
+                    if (player.exp >= levelUpExp) {
+                        player.level += 1;
+                        player.exp = player.exp % levelUpExp;
+                        messages.push("You've ascended to Level " + player.level + "!");
+                    }
                     this.kill(this.state.current.ref);
                     break;
                 default:
@@ -416,7 +430,11 @@ var Game = React.createClass({
         });
     },
     battle: function () {
-        this.setState({ battling: !this.state.battling });
+        this.setState({ battling: !this.state.battling }, function () {
+            var tInit = diceRoll(20) + this.state.current.battle.init;
+            var pInit = diceRoll(20) + this.props.entities.player.init;
+            if (tInit > pInit) this.enemyTurn(this.state.current);
+        });
     },
     render: function () {
         var actions = (this.state.battling) ? this.props.entities.battle : this.state.current.actions;
