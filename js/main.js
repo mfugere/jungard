@@ -17,16 +17,12 @@ var MenuBar = React.createClass({
 
 var Header = React.createClass({
     render: function () {
-        var previews = [];
-        this.props.context.actions.forEach(function (action) {
-            if (action.preview) previews.push(<p key={action.ref + "/preview"}>{action.preview}</p>);
-        }, previews);
-        var messages = [];
-        if (this.props.messages.length > 0) {
-            for (var i in this.props.messages) {
-                messages.push(<p key={"message" + i}>{this.props.messages[i]}</p>);
-            }
-        }
+        var previews = this.props.context.actions.map(function (action) {
+            if (action.preview) return (<p key={action.ref + "/preview"}>{action.preview}</p>);
+        });
+        var messages = this.props.messages.map(function (message, i) {
+            return (<p key={"message" + i}>{message}</p>);
+        });
         return (
             <div>
                 <MenuBar />
@@ -55,9 +51,8 @@ var Actions = React.createClass({
         else this.props.onAction(ref);
     },
     render: function () {
-        var buttons = [];
-        this.props.actions.forEach(function (action) {
-            if (action.description) buttons.push(<button key={action.ref} onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
+        var buttons = this.props.actions.map(function (action) {
+            if (action.description) return (<button key={action.ref} onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
         }, this);
         return (
             <div>{buttons}</div>
