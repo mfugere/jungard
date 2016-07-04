@@ -2,15 +2,41 @@
 
 var levelUpExp = 100;
 
-var player = {
-    hp: 20,
-    str: 6,
-    ac: 15,
-    init: 2,
-    level: 1,
-    exp: 0,
-    activeEffects: {}
-};
+var objects = [
+    {
+        ref: "objects/shortsword",
+        group: "sword",
+        description: "This sword describes my sex life: short, simple, and not very effective.",
+        stats: [
+            {
+                key: "Attack",
+                value: 6
+            }
+        ]
+    },
+    {
+        ref: "objects/leatherarmor",
+        group: "leather armor",
+        description: "This is a simple light body and leg armor.",
+        stats: [
+            {
+                key: "Defense",
+                value: 8
+            }
+        ]
+    },
+    {
+        ref: "objects/leatherboots",
+        group: "leather armor",
+        description: "This boots are light and provide some defense.",
+        stats: [
+            {
+                key: "Defense",
+                value: 4
+            }
+        ]
+    }
+]
 
 var actors = [
     {
@@ -302,7 +328,30 @@ var Game = React.createClass({
         return {
             map: this.props.entities.map,
             actors: this.props.entities.actors,
-            player: this.props.entities.player,
+            player: {
+                hp: 20, crg: 0, str: 3, dex: 3, chr: 3, int: 0,
+                level: 1, exp: 0,
+                weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
+                armor: [
+                    getMemberByRef(this.props.entities.objects, "objects/leatherarmor"),
+                    getMemberByRef(this.props.entities.objects, "objects/leatherboots")
+                ],
+                activeEffects: {},
+                ac: function () {
+                    var totalAc = this.dex;
+                    for (var i in this.armor) {
+                        for (var j in this.armor[i].stats) {
+                            if (this.armor[i].stats[j].key === "Defense") totalAc += this.armor[i].stats[j].value;
+                        }
+                    }
+                    return totalAc;
+                },
+                attackRoll: function () {
+                    for (var i in this.weapon.stats) {
+                        if (this.weapon.stats[i].key === "Attack") return this.weapon.stats[i].value;
+                    }
+                }
+            },
             current: this.props.entities.map[0],
             messages: [],
             battling: false
@@ -311,7 +360,7 @@ var Game = React.createClass({
     enemyTurn: function (enemy) {
         var hitStatus = "";
         var player = this.state.player;
-        var playerAc = player.ac;
+        var playerAc = player.ac();
         if (player.activeEffects.ac) {
             playerAc += player.activeEffects.ac;
             delete player.activeEffects.ac;
@@ -354,8 +403,8 @@ var Game = React.createClass({
             switch (ref) {
                 case "battle/attack":
                     var hitStatus = "";
-                    if (diceRoll(20) >= target.battle.ac) {
-                        var enemyDamage = diceRoll(this.props.entities.player.str);
+                    if (diceRoll(20) + this.state.player.str >= target.battle.ac) {
+                        var enemyDamage = diceRoll(this.state.player.attackRoll());
                         target.battle.hp -= enemyDamage;
                         this.setState({ actors: actors });
                         hitStatus = "do " + enemyDamage + " points of damage.";
@@ -432,7 +481,7 @@ var Game = React.createClass({
     battle: function () {
         this.setState({ battling: !this.state.battling }, function () {
             var tInit = diceRoll(20) + this.state.current.battle.init;
-            var pInit = diceRoll(20) + this.props.entities.player.init;
+            var pInit = diceRoll(20) + this.state.player.dex;
             if (tInit > pInit) this.enemyTurn(this.state.current);
         });
     },
@@ -449,6 +498,6 @@ var Game = React.createClass({
 });
 
 ReactDOM.render(
-    <Game entities={{ player: player, battle: battleActions, actors: actors, map: map }} />,
+    <Game entities={{ objects: objects, battle: battleActions, actors: actors, map: map }} />,
     document.getElementById("game")
 );
