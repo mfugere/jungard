@@ -1,0 +1,9 @@
+.messages {
+	height: 175px;
+	overflow: scroll;
+}
+
+.close {
+	margin-top: 2%;
+	margin-right: 2%;
+}

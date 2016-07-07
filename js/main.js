@@ -1,15 +1,43 @@
 "use strict";
 
-var MenuBar = React.createClass({
+var GameModal = React.createClass({
     render: function () {
         return (
-            <div>
-                <button>Game</button>
-                <button>Player</button>
-                <button>Inventory</button>
-                <button>Map</button>
-                <button>Help</button>
-                <button>About</button>
+            <div id="gameModal" className="modal fade">
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <button type="button" className="close" data-dismiss="modal"><span>&times;</span></button>
+                        <div className="modal-header">
+                            <h4 className="modal-title">Game Options</h4>
+                        </div>
+                        <div className="modal-body">Test</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+});
+
+var MenuBar = React.createClass({
+    openMenu: function (name) {
+        var modalName = name.toLowerCase();
+        $("#" + modalName + "Modal").modal();
+    },
+    render: function () {
+        var menuItems = this.props.options.map(function (option) {
+            return (
+                <div key={option.ref} className="row">
+                    <button className="col-xs-12 btn btn-default" onClick={this.openMenu.bind(this, option.name)}>
+                        <span className={"glyphicon glyphicon-" + option.icon}></span>
+                        &nbsp;{option.name}
+                    </button>
+                </div>
+            );
+        }, this);
+        return (
+            <div className="col-xs-4">
+                <div>{menuItems}</div>
+                <GameModal />
             </div>
         );
     }
@@ -24,13 +52,21 @@ var Header = React.createClass({
             return (<p key={"message" + i}>{message}</p>);
         });
         return (
-            <div>
-                <MenuBar />
-                <div>
-                    <h1>{this.props.context.group}</h1>
-                    <p>{this.props.context.description}</p>
-                    <div>{previews}</div>
-                    <div>{messages}</div>
+            <div className="container panel panel-default">
+                <div className="row panel-body">
+                    <MenuBar options={this.props.options} />
+                    <div className="col-xs-8">
+                        <div className="row panel panel-default">
+                            <div className="panel-heading">
+                                <div className="panel-title">{this.props.context.group}</div>
+                            </div>
+                            <div className="panel-body messages">
+                                <p>{this.props.context.description}</p>
+                                <div>{previews}</div>
+                                <div>{messages}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -52,10 +88,22 @@ var Actions = React.createClass({
     },
     render: function () {
         var buttons = this.props.actions.map(function (action) {
-            if (action.description) return (<button key={action.ref} onClick={this.handleAction.bind(this, action.ref)}>{action.description}</button>);
+            if (action.description) return (
+                <button className="btn btn-default btn-lg btn-block"
+                        key={action.ref}
+                        onClick={this.handleAction.bind(this, action.ref)}>{action.description}
+                </button>
+            );
         }, this);
         return (
-            <div>{buttons}</div>
+            <div className="container panel panel-default">
+                <div className="row panel-heading">
+                    <div className="panel-title">Available Actions</div>
+                </div>
+                <div className="row panel-body">
+                    <div className="col-xs-12">{buttons}</div>
+                </div>
+            </div>
         );
     }
 });
@@ -63,9 +111,9 @@ var Actions = React.createClass({
 var Footer = React.createClass({
     render: function () {
         return (
-            <div class="container">
-                <div class="row">
-                    <div class="col-xs-12">Copyright 2016 Matt Fugere. All rights reserved.</div>
+            <div className="container panel panel-default">
+                <div className="row panel-body">
+                    <div className="col-xs-12">Copyright 2016 Matt Fugere. All rights reserved.</div>
                 </div>
             </div>
         );
@@ -238,7 +286,7 @@ var Game = React.createClass({
         var actions = (this.state.battling) ? this.props.entities.battle : this.state.current.actions;
         return (
             <div>
-                <Header context={this.state.current} messages={this.state.messages} />
+                <Header context={this.state.current} messages={this.state.messages} options={this.props.entities.options} />
                 <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} />
                 <Footer />
             </div>
@@ -247,6 +295,6 @@ var Game = React.createClass({
 });
 
 ReactDOM.render(
-    <Game entities={{ objects: objects, battle: battleActions, actors: actors, map: map }} />,
+    <Game entities={{ options: options, objects: objects, battle: battleActions, actors: actors, map: map }} />,
     document.getElementById("game")
 );

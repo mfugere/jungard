@@ -1,5 +1,40 @@
 var levelUpExp = 100;
 
+var options = [
+    {
+        ref: "options/game",
+        name: "Game",
+        icon: "tower"
+    },
+    {
+        ref: "options/player",
+        name: "Player",
+        icon: "user"
+    },
+    {
+        ref: "options/inventory",
+        name: "Inventory",
+        icon: "list-alt"
+    },
+    {
+        ref: "options/map",
+        name: "Map",
+        icon: "map-marker"
+    },
+    {
+        ref: "options/help",
+        name: "Help",
+        icon: "question-sign"
+    },
+    {
+        ref: "options/about",
+        name: "About",
+        icon: "info-sign"
+    }
+];
+
+"Game", "Player", "Inventory", "Map", "Help", "About"
+
 var objects = [
     {
         ref: "objects/shortsword",
