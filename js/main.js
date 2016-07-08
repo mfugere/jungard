@@ -19,6 +19,35 @@ var GameModal = React.createClass({
 });
 
 var PlayerModal = React.createClass({
+    getInitialState: function () {
+        return {
+            name: this.props.player.name,
+            str: this.props.player.str,
+            dex: this.props.player.dex,
+            int: this.props.player.int,
+            chr: this.props.player.chr
+        };
+    },
+    onNameChange: function (e) {
+        this.setState({ name: e.target.value });
+    },
+    rollStats: function () {
+        this.setState({
+            str: Math.floor(Math.random() * 6),
+            dex: Math.floor(Math.random() * 6),
+            int: Math.floor(Math.random() * 6),
+            chr: Math.floor(Math.random() * 6),
+        });
+    },
+    save: function () {
+        this.props.updatePlayer({
+            name: this.state.name,
+            str: this.state.str,
+            dex: this.state.dex,
+            int: this.state.int,
+            chr: this.state.chr
+        });
+    },
     render: function () {
         return (
             <div id="playerModal" className="modal fade">
@@ -28,7 +57,51 @@ var PlayerModal = React.createClass({
                         <div className="modal-header">
                             <h4 className="modal-title">Player Options</h4>
                         </div>
-                        <div className="modal-body">Test</div>
+                        <div className="modal-body">
+                            <form className="form-horizontal">
+                                <div className="form-group">
+                                    <label for="charName" className="col-xs-4 control-label">Your name:&nbsp;</label>
+                                    <div className="col-xs-8">
+                                        <input type="text" className="form-control" id="charName" onChange={this.onNameChange} />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Strength:&nbsp;</label>
+                                    <div className="col-xs-8">
+                                        <p className="form-control-static">{this.state.str}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Dexterity:&nbsp;</label>
+                                    <div className="col-xs-8">
+                                        <p className="form-control-static">{this.state.dex}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Intelligence:&nbsp;</label>
+                                    <div className="col-xs-8">
+                                        <p className="form-control-static">{this.state.int}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Charisma:&nbsp;</label>
+                                    <div className="col-xs-8">
+                                        <p className="form-control-static">{this.state.chr}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <div className="col-xs-offset-2 col-xs-10">
+                                        <button type="button" className="btn btn-default" onClick={this.rollStats}>Roll Stats</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div className="modal-footer">
+                            <div className="pull-right">
+                                <button className="btn btn-success" data-dismiss="modal" onClick={this.save}>Save</button>
+                                <button className="btn btn-danger" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -38,8 +111,7 @@ var PlayerModal = React.createClass({
 
 var MenuBar = React.createClass({
     openMenu: function (name) {
-        var modalName = name.toLowerCase();
-        $("#" + modalName + "Modal").modal();
+        this.props.openMenu(name);
     },
     render: function () {
         var menuItems = this.props.options.map(function (option) {
@@ -55,8 +127,6 @@ var MenuBar = React.createClass({
         return (
             <div className="col-xs-4">
                 <div>{menuItems}</div>
-                <GameModal />
-                <PlayerModal />
             </div>
         );
     }
@@ -73,7 +143,7 @@ var Header = React.createClass({
         return (
             <div className="container panel panel-default">
                 <div className="row panel-body">
-                    <MenuBar options={this.props.options} />
+                    <MenuBar options={this.props.options} openMenu={this.props.openMenu} />
                     <div className="col-xs-8">
                         <div className="row panel panel-default">
                             <div className="panel-heading">
@@ -145,7 +215,8 @@ var Game = React.createClass({
             map: this.props.entities.map,
             actors: this.props.entities.actors,
             player: {
-                hp: 20, crg: 0, str: 3, dex: 3, chr: 3, int: 0,
+                name: "",
+                hp: 20, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
                 level: 1, exp: 0,
                 weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
                 armor: [
@@ -172,6 +243,21 @@ var Game = React.createClass({
             messages: [],
             battling: false
         };
+    },
+    componentWillMount: function () {
+        // Session load goes here.
+    },
+    componentDidMount: function () {
+        if (this.state.player.name === "") $("#playerModal").modal();
+    },
+    updatePlayer: function (updates) {
+        var player = this.state.player;
+        for (var key in updates) {
+            if (updates.hasOwnProperty(key)) {
+                player[key] = updates[key];
+            }
+        }
+        this.setState({ player: player });
     },
     enemyTurn: function (enemy) {
         var hitStatus = "";
@@ -301,13 +387,19 @@ var Game = React.createClass({
             if (tInit > pInit) this.enemyTurn(this.state.current);
         });
     },
+    openMenu: function (name) {
+        var modalName = name.toLowerCase();
+        $("#" + modalName + "Modal").modal();
+    },
     render: function () {
         var actions = (this.state.battling) ? this.props.entities.battle : this.state.current.actions;
         return (
             <div>
-                <Header context={this.state.current} messages={this.state.messages} options={this.props.entities.options} />
+                <Header context={this.state.current} messages={this.state.messages} options={this.props.entities.options} openMenu={this.openMenu} />
                 <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} />
                 <Footer />
+                <GameModal />
+                <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} />
             </div>
         );
     }
