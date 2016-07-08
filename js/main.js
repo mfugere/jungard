@@ -133,6 +133,9 @@ var MenuBar = React.createClass({
 });
 
 var Header = React.createClass({
+    componentDidUpdate: function () {
+        $(".messages").scrollTop($(".messages")[0].scrollHeight);
+    },
     render: function () {
         var previews = this.props.context.actions.map(function (action) {
             if (action.preview) return (<p key={action.ref + "/preview"}>{action.preview}</p>);
