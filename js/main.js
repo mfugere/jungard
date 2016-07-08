@@ -18,6 +18,24 @@ var GameModal = React.createClass({
     }
 });
 
+var PlayerModal = React.createClass({
+    render: function () {
+        return (
+            <div id="playerModal" className="modal fade">
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <button type="button" className="close" data-dismiss="modal"><span>&times;</span></button>
+                        <div className="modal-header">
+                            <h4 className="modal-title">Player Options</h4>
+                        </div>
+                        <div className="modal-body">Test</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+});
+
 var MenuBar = React.createClass({
     openMenu: function (name) {
         var modalName = name.toLowerCase();
@@ -38,6 +56,7 @@ var MenuBar = React.createClass({
             <div className="col-xs-4">
                 <div>{menuItems}</div>
                 <GameModal />
+                <PlayerModal />
             </div>
         );
     }
