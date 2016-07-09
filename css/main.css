@@ -11,3 +11,11 @@
 .chr-create .chr-update .chr-view {
 	display: none;
 }
+
+.evens {
+	background-color: #ffffcc;
+}
+
+.odds {
+	background-color: #ffffee;
+}

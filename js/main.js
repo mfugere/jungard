@@ -64,6 +64,34 @@ var PlayerModal = React.createClass({
         });
     },
     render: function () {
+        var statArr = [
+            { name: "Level", abbr: "level", attr: this.state.level, mod: false },
+            { name: "Hit points", abbr: "hp", attr: this.state.hp, mod: false },
+            { name: "Magic points", abbr: "mp", attr: this.state.mp, mod: false },
+            { name: "Courage", abbr: "crg", attr: this.state.crg, mod: false },
+            { name: "Strength", abbr: "str", attr: this.state.str, mod: true },
+            { name: "Dexterity", abbr: "dex", attr: this.state.dex, mod: true },
+            { name: "Intelligence", abbr: "int", attr: this.state.int, mod: true },
+            { name: "Charisma", abbr: "chr", attr: this.state.chr, mod: true }
+        ];
+        var statUI = statArr.map(function (stat, i) {
+            var stripeClass = (i % 2 === 0) ? "evens" : "odds";
+            var modifiers = (!stat.mod) ? "" : (
+                <div className="chr-update col-xs-2">
+                    <button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, -1)}>-</button>
+                    <button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, 1)}>+</button>
+                </div>
+            )
+            return (
+                <div key={stat.abbr + "Key"} className={stripeClass + " form-group"}>
+                    <label className="col-xs-4 control-label">{stat.name}:&nbsp;</label>
+                    <div className="col-xs-2">
+                        <p className="form-control-static">{stat.attr}</p>
+                    </div>
+                    {modifiers}
+                </div>
+            );
+        }, this);
         return (
             <div id="playerModal" className="modal fade">
                 <div className="modal-dialog">
@@ -81,64 +109,7 @@ var PlayerModal = React.createClass({
                                         <p className="chr-view chr-update form-control-static">{this.state.name}</p>
                                     </div>
                                 </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Level:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.level}</p>
-                                    </div>
-                                </div>
-                                <hr />
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Hit points:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.hp}</p>
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Magic points:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.mp}</p>
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Courage:&nbsp;</label>
-                                    <div className="col-xs-8">
-                                        <p className="form-control-static">{this.state.crg}</p>
-                                    </div>
-                                </div>
-                                <hr />
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Strength:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.str}</p>
-                                    </div>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "str", this.state.str, -1)}>-</button>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "str", this.state.str, 1)}>+</button>
-                                </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Dexterity:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.dex}</p>
-                                    </div>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "dex", this.state.dex, -1)}>-</button>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "dex", this.state.dex, 1)}>+</button>
-                                </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Intelligence:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.int}</p>
-                                    </div>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "int", this.state.int, -1)}>-</button>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "int", this.state.int, 1)}>+</button>
-                                </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Charisma:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.chr}</p>
-                                    </div>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "chr", this.state.chr, -1)}>-</button>
-                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "chr", this.state.chr, 1)}>+</button>
-                                </div>
+                                {statUI}
                                 <div className="chr-create form-group">
                                     <div className="col-xs-offset-2 col-xs-10">
                                         <button type="button" className="btn btn-default" onClick={this.rollStats}>Roll Stats</button>
@@ -149,7 +120,6 @@ var PlayerModal = React.createClass({
                         <div className="modal-footer">
                             <div className="pull-right">
                                 <button className="chr-create chr-update btn btn-success" onClick={this.save}>Save</button>
-                                <button className="chr-create chr-update btn btn-danger" data-dismiss="modal">Cancel</button>
                                 <button className="chr-view btn btn-primary" data-dismiss="modal">Close</button>
                             </div>
                         </div>
