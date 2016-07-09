@@ -22,14 +22,27 @@ var PlayerModal = React.createClass({
     getInitialState: function () {
         return {
             name: this.props.player.name,
+            level: this.props.player.level,
+            hp: this.props.player.hp,
+            mp: this.props.player.mp,
+            crg: this.props.player.crg,
             str: this.props.player.str,
             dex: this.props.player.dex,
             int: this.props.player.int,
             chr: this.props.player.chr
         };
     },
+    componentDidUpdate: function () {
+        $("[class^=chr-]").hide();
+        $("." + this.props.mode).show();
+    },
     onNameChange: function (e) {
         this.setState({ name: e.target.value });
+    },
+    modStat: function (statName, stat, mod) {
+        var newStat = {};
+        newStat[statName] = stat + mod;
+        this.setState(newStat);
     },
     rollStats: function () {
         this.setState({
@@ -42,6 +55,8 @@ var PlayerModal = React.createClass({
     save: function () {
         this.props.updatePlayer({
             name: this.state.name,
+            hp: this.state.hp,
+            mp: this.state.mp,
             str: this.state.str,
             dex: this.state.dex,
             int: this.state.int,
@@ -62,34 +77,69 @@ var PlayerModal = React.createClass({
                                 <div className="form-group">
                                     <label for="charName" className="col-xs-4 control-label">Your name:&nbsp;</label>
                                     <div className="col-xs-8">
-                                        <input type="text" className="form-control" id="charName" onChange={this.onNameChange} />
+                                        <input type="text" className="chr-create form-control" id="charName" onChange={this.onNameChange} />
+                                        <p className="chr-view chr-update form-control-static">{this.state.name}</p>
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label className="col-xs-4 control-label">Strength:&nbsp;</label>
+                                    <label className="col-xs-4 control-label">Level:&nbsp;</label>
+                                    <div className="col-xs-2">
+                                        <p className="form-control-static">{this.state.level}</p>
+                                    </div>
+                                </div>
+                                <hr />
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Hit points:&nbsp;</label>
+                                    <div className="col-xs-2">
+                                        <p className="form-control-static">{this.state.hp}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Magic points:&nbsp;</label>
+                                    <div className="col-xs-2">
+                                        <p className="form-control-static">{this.state.mp}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Courage:&nbsp;</label>
                                     <div className="col-xs-8">
+                                        <p className="form-control-static">{this.state.crg}</p>
+                                    </div>
+                                </div>
+                                <hr />
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Strength:&nbsp;</label>
+                                    <div className="col-xs-2">
                                         <p className="form-control-static">{this.state.str}</p>
                                     </div>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "str", this.state.str, -1)}>-</button>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "str", this.state.str, 1)}>+</button>
                                 </div>
                                 <div className="form-group">
                                     <label className="col-xs-4 control-label">Dexterity:&nbsp;</label>
-                                    <div className="col-xs-8">
+                                    <div className="col-xs-2">
                                         <p className="form-control-static">{this.state.dex}</p>
                                     </div>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "dex", this.state.dex, -1)}>-</button>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "dex", this.state.dex, 1)}>+</button>
                                 </div>
                                 <div className="form-group">
                                     <label className="col-xs-4 control-label">Intelligence:&nbsp;</label>
-                                    <div className="col-xs-8">
+                                    <div className="col-xs-2">
                                         <p className="form-control-static">{this.state.int}</p>
                                     </div>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "int", this.state.int, -1)}>-</button>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "int", this.state.int, 1)}>+</button>
                                 </div>
                                 <div className="form-group">
                                     <label className="col-xs-4 control-label">Charisma:&nbsp;</label>
-                                    <div className="col-xs-8">
+                                    <div className="col-xs-2">
                                         <p className="form-control-static">{this.state.chr}</p>
                                     </div>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "chr", this.state.chr, -1)}>-</button>
+                                    <button type="button" className="chr-update col-xs-1 btn btn-default" onClick={this.modStat.bind(this, "chr", this.state.chr, 1)}>+</button>
                                 </div>
-                                <div className="form-group">
+                                <div className="chr-create form-group">
                                     <div className="col-xs-offset-2 col-xs-10">
                                         <button type="button" className="btn btn-default" onClick={this.rollStats}>Roll Stats</button>
                                     </div>
@@ -98,8 +148,9 @@ var PlayerModal = React.createClass({
                         </div>
                         <div className="modal-footer">
                             <div className="pull-right">
-                                <button className="btn btn-success" data-dismiss="modal" onClick={this.save}>Save</button>
-                                <button className="btn btn-danger" data-dismiss="modal">Cancel</button>
+                                <button className="chr-create chr-update btn btn-success" onClick={this.save}>Save</button>
+                                <button className="chr-create chr-update btn btn-danger" data-dismiss="modal">Cancel</button>
+                                <button className="chr-view btn btn-primary" data-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -219,7 +270,7 @@ var Game = React.createClass({
             actors: this.props.entities.actors,
             player: {
                 name: "",
-                hp: 20, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
+                hp: 20, mp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
                 level: 1, exp: 0,
                 weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
                 armor: [
@@ -244,6 +295,7 @@ var Game = React.createClass({
             },
             current: this.props.entities.map[0],
             messages: [],
+            mode: "chr-view",
             battling: false
         };
     },
@@ -251,7 +303,11 @@ var Game = React.createClass({
         // Session load goes here.
     },
     componentDidMount: function () {
-        if (this.state.player.name === "") $("#playerModal").modal();
+        if (this.state.player.name === "") {
+            this.setState({ mode: "chr-create" }, function () {
+                $("#playerModal").modal();
+            });
+        }
     },
     updatePlayer: function (updates) {
         var player = this.state.player;
@@ -260,7 +316,7 @@ var Game = React.createClass({
                 player[key] = updates[key];
             }
         }
-        this.setState({ player: player });
+        this.setState({ player: player, mode: "chr-view" });
     },
     enemyTurn: function (enemy) {
         var hitStatus = "";
@@ -334,14 +390,17 @@ var Game = React.createClass({
                 case "battle/win":
                     var player = this.state.player;
                     player.exp += target.battle.exp;
-                    this.setState({ current: getMemberByRef(this.state.map, target.location), battling: false });
                     messages.push(interpolate(actionMessage, [ target.group, target.battle.exp ]));
                     if (player.exp >= levelUpExp) {
                         player.level += 1;
                         player.exp = player.exp % levelUpExp;
                         messages.push("You've ascended to Level " + player.level + "!");
+                        this.setState({ mode: "chr-update" }, function () {
+                            $("#playerModal").modal();
+                        });
                     }
                     this.kill(this.state.current.ref);
+                    this.setState({ player: player, current: getMemberByRef(this.state.map, target.location), battling: false });
                     break;
                 default:
                     break;
@@ -402,7 +461,7 @@ var Game = React.createClass({
                 <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} />
                 <Footer />
                 <GameModal />
-                <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} />
+                <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} mode={this.state.mode} />
             </div>
         );
     }
