@@ -1,4 +1,5 @@
 var levelUpExp = 100;
+var levelUpPoints = 2;
 
 var options = [
     {

@@ -24,13 +24,19 @@ var PlayerModal = React.createClass({
             name: this.props.player.name,
             level: this.props.player.level,
             hp: this.props.player.hp,
+            chp: this.props.player.chp,
             mp: this.props.player.mp,
+            cmp: this.props.player.cmp,
             crg: this.props.player.crg,
             str: this.props.player.str,
             dex: this.props.player.dex,
             int: this.props.player.int,
-            chr: this.props.player.chr
+            chr: this.props.player.chr,
+            skillPoints: this.props.player.skillPoints
         };
+    },
+    componentWillReceiveProps: function () {
+        this.setState(this.getInitialState());
     },
     componentDidUpdate: function () {
         $("[class^=chr-]").hide();
@@ -38,13 +44,16 @@ var PlayerModal = React.createClass({
     },
     onNameChange: function (e) {
         this.setState({ name: e.target.value });
+        $(".error-name").hide();
     },
     modStat: function (statName, stat, mod) {
-        var newStat = {};
-        newStat[statName] = stat + mod;
-        this.setState(newStat);
+        var changes = {};
+        changes[statName] = stat + mod;
+        changes["skillPoints"] = this.state.skillPoints - mod;
+        this.setState(changes);
     },
     rollStats: function () {
+        $(".error-stats").hide();
         this.setState({
             str: Math.floor(Math.random() * 6),
             dex: Math.floor(Math.random() * 6),
@@ -53,21 +62,31 @@ var PlayerModal = React.createClass({
         });
     },
     save: function () {
-        this.props.updatePlayer({
-            name: this.state.name,
-            hp: this.state.hp,
-            mp: this.state.mp,
-            str: this.state.str,
-            dex: this.state.dex,
-            int: this.state.int,
-            chr: this.state.chr
-        });
+        var valid = true;
+        if (this.state.name === "") {
+            valid = false;
+            $(".error-name").show();
+        }
+        if (this.state.str === 0 && this.state.dex === 0 && this.state.int === 0 && this.state.chr === 0) {
+            valid = false;
+            $(".error-stats").show();
+        }
+        if (valid) {
+            this.props.updatePlayer({
+                name: this.state.name,
+                hp: this.state.hp,
+                mp: this.state.mp,
+                str: this.state.str,
+                dex: this.state.dex,
+                int: this.state.int,
+                chr: this.state.chr
+            });
+        }
     },
     render: function () {
         var statArr = [
+            { name: "Skill points available", abbr: "skillPoints", attr: this.state.skillPoints, mod: false },
             { name: "Level", abbr: "level", attr: this.state.level, mod: false },
-            { name: "Hit points", abbr: "hp", attr: this.state.hp, mod: false },
-            { name: "Magic points", abbr: "mp", attr: this.state.mp, mod: false },
             { name: "Courage", abbr: "crg", attr: this.state.crg, mod: false },
             { name: "Strength", abbr: "str", attr: this.state.str, mod: true },
             { name: "Dexterity", abbr: "dex", attr: this.state.dex, mod: true },
@@ -76,10 +95,14 @@ var PlayerModal = React.createClass({
         ];
         var statUI = statArr.map(function (stat, i) {
             var stripeClass = (i % 2 === 0) ? "evens" : "odds";
+            var statUp = (this.state.skillPoints <= 0) ? "" :
+                (<button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, 1)}>+</button>);
+            var statDown = (stat.attr === this.props.player[stat.abbr]) ? "" :
+                (<button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, -1)}>-</button>);
             var modifiers = (!stat.mod) ? "" : (
                 <div className="chr-update col-xs-2">
-                    <button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, -1)}>-</button>
-                    <button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, 1)}>+</button>
+                    {statDown}
+                    {statUp}
                 </div>
             )
             return (
@@ -96,23 +119,46 @@ var PlayerModal = React.createClass({
             <div id="playerModal" className="modal fade">
                 <div className="modal-dialog">
                     <div className="modal-content">
-                        <button type="button" className="close" data-dismiss="modal"><span>&times;</span></button>
+                        <button type="button" className="chr-view chr-update close" data-dismiss="modal"><span>&times;</span></button>
                         <div className="modal-header">
                             <h4 className="modal-title">Player Options</h4>
                         </div>
                         <div className="modal-body">
                             <form className="form-horizontal">
                                 <div className="form-group">
-                                    <label for="charName" className="col-xs-4 control-label">Your name:&nbsp;</label>
-                                    <div className="col-xs-8">
-                                        <input type="text" className="chr-create form-control" id="charName" onChange={this.onNameChange} />
-                                        <p className="chr-view chr-update form-control-static">{this.state.name}</p>
+                                    <div className="row">
+                                        <label for="charName" className="col-xs-4 control-label">Your name:&nbsp;</label>
+                                        <div className="col-xs-8">
+                                            <input type="text" className="chr-create form-control" id="charName" onChange={this.onNameChange} />
+                                            <p className="chr-view chr-update form-control-static">{this.state.name}</p>
+                                        </div>
+                                    </div>
+                                    <div className="row">
+                                        <div className="col-xs-offset-4 col-xs-8 help-block error-name">Please enter a name.</div>
                                     </div>
                                 </div>
                                 {statUI}
+                                <hr />
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Hit points:&nbsp;</label>
+                                    <div className="col-xs-2">
+                                        <p className="form-control-static">{this.state.chp + " / " + this.state.hp}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Magic points:&nbsp;</label>
+                                    <div className="col-xs-2">
+                                        <p className="form-control-static">{this.state.cmp + " / " + this.state.mp}</p>
+                                    </div>
+                                </div>
                                 <div className="chr-create form-group">
-                                    <div className="col-xs-offset-2 col-xs-10">
-                                        <button type="button" className="btn btn-default" onClick={this.rollStats}>Roll Stats</button>
+                                    <div className="row">
+                                        <div className="col-xs-offset-4 col-xs-8">
+                                            <button type="button" className="btn btn-default" onClick={this.rollStats}>Roll Stats</button>
+                                        </div>
+                                    </div>
+                                    <div className="row">
+                                        <div className="col-xs-offset-4 col-xs-8 help-block error-stats">Please roll your stats.</div>
                                     </div>
                                 </div>
                             </form>
@@ -120,7 +166,7 @@ var PlayerModal = React.createClass({
                         <div className="modal-footer">
                             <div className="pull-right">
                                 <button className="chr-create chr-update btn btn-success" onClick={this.save}>Save</button>
-                                <button className="chr-view btn btn-primary" data-dismiss="modal">Close</button>
+                                <button className="chr-view chr-update btn btn-primary" data-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -241,7 +287,7 @@ var Game = React.createClass({
             player: {
                 name: "",
                 hp: 20, mp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
-                level: 1, exp: 0,
+                level: 1, exp: 0, skillPoints: 0, chp: 20, cmp: 0,
                 weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
                 armor: [
                     getMemberByRef(this.props.entities.objects, "objects/leatherarmor"),
@@ -275,7 +321,7 @@ var Game = React.createClass({
     componentDidMount: function () {
         if (this.state.player.name === "") {
             this.setState({ mode: "chr-create" }, function () {
-                $("#playerModal").modal();
+                this.openMenu("Player");
             });
         }
     },
@@ -298,7 +344,7 @@ var Game = React.createClass({
         }
         if (diceRoll(20) >= playerAc) {
             var playerDamage = diceRoll(enemy.battle.str);
-            player.hp -= playerDamage;
+            player.chp -= playerDamage;
             this.setState({ player: player });
             hitStatus = "does " + playerDamage + " points of damage.";
         } else {
@@ -363,10 +409,12 @@ var Game = React.createClass({
                     messages.push(interpolate(actionMessage, [ target.group, target.battle.exp ]));
                     if (player.exp >= levelUpExp) {
                         player.level += 1;
+                        player.skillPoints += levelUpPoints;
                         player.exp = player.exp % levelUpExp;
+                        player.chp = player.hp;
                         messages.push("You've ascended to Level " + player.level + "!");
                         this.setState({ mode: "chr-update" }, function () {
-                            $("#playerModal").modal();
+                            this.openMenu("Player");
                         });
                     }
                     this.kill(this.state.current.ref);
@@ -421,7 +469,7 @@ var Game = React.createClass({
     },
     openMenu: function (name) {
         var modalName = name.toLowerCase();
-        $("#" + modalName + "Modal").modal();
+        $("#" + modalName + "Modal").modal({ backdrop: "static", keyboard: false });
     },
     render: function () {
         var actions = (this.state.battling) ? this.props.entities.battle : this.state.current.actions;

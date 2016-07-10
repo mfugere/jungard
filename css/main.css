@@ -19,3 +19,8 @@
 .odds {
 	background-color: #ffffee;
 }
+
+.error-name, .error-stats {
+	color: #ff0000;
+	display: none;
+}
