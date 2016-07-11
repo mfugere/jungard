@@ -34,8 +34,6 @@ var options = [
     }
 ];
 
-"Game", "Player", "Inventory", "Map", "Help", "About"
-
 var objects = [
     {
         ref: "objects/shortsword",
@@ -77,7 +75,7 @@ var actors = [
         ref: "actors/jim",
         group: "Jim",
         description: "You see a man. He's wearing a baseball cap and has a wooden leg.",
-        location: "map/forest",
+        location: "map/kaeliane",
         dialog: [
             {
                 key: "intro",
@@ -99,7 +97,7 @@ var actors = [
         ref: "actors/spider",
         group: "Spider",
         description: "A spider is crawling about.",
-        location: "map/deepforest",
+        location: "map/lakelullabyne",
         battle: {
             hp: 10,
             str: 4,
@@ -154,89 +152,113 @@ var battleActions = [
 var map = [
     {
         ref: "map/home",
-        group: "Home",
-        description: "Welcome to the world! The sky is blue and the grass is green.",
+        group: "Kaelia",
+        member: "Home",
+        description: "You're home! You feel comfortable and safe here.",
         actions: [
             {
-                ref: "map/grassland",
-                description: "Go east"
-            },
-            {
-                ref: "map/forestedge",
-                description: "Go southeast"
+                ref: "map/kaeliase",
+                description: "Exit"
             }
         ]
     },
     {
-        ref: "map/grassland",
-        group: "Grassland",
-        description: "Wow this place is boring. There isn't much to this place.",
+        ref: "map/kaeliase",
+        group: "Chamomile Plains",
+        member: "Southeast Kaelia Town",
+        description: "Your hometown is nestled amidst rolling plains and a tranquil lake.",
         actions: [
             {
                 ref: "map/home",
-                description: "Go west"
+                preview: "Your house looks as welcoming as ever.",
+                description: "Enter your house"
             },
             {
-                ref: "map/forestedge",
-                description: "Go south"
-            },
-            {
-                ref: "map/forest",
-                description: "Go east"
-            }
-        ]
-    },
-    {
-        ref: "map/forestedge",
-        group: "Forest Edge",
-        description: "You're finding your way around. This zone has some nice trees.",
-        actions: [
-            {
-                ref: "map/home",
-                description: "Go northwest"
-            },
-            {
-                ref: "map/grassland",
+                ref: "map/kaeliane",
                 description: "Go north"
             },
             {
-                ref: "map/forest",
-                description: "Go northeast"
+                ref: "map/kaeliasw",
+                description: "Go west"
             }
         ]
     },
     {
-        ref: "map/forest",
-        group: "Forest",
-        description: "You find yourself in a forest. It's dark and spooky.",
+        ref: "map/kaeliasw",
+        group: "Chamomile Plains",
+        member: "Southwest Kaelia Town",
+        description: "The southeastern part of town is a bit busier, as many shops are here.",
         actions: [
             {
-                ref: "map/grassland",
-                description: "Go west"
+                ref: "map/kaeliagoods",
+                preview: "The Kaelia General Goods store is in the center of the town.",
+                description: "Enter the goods store"
             },
             {
-                ref: "map/forestedge",
-                description: "Go southwest"
-            },
-            {
-                ref: "map/deepforest",
+                ref: "map/kaeliase",
                 description: "Go east"
+            }
+        ]
+    },
+    {
+        ref: "map/kaeliagoods",
+        group: "Kaelia",
+        member: "Kaelia General Goods",
+        description: "You enter the general goods store, where you can buy a number of odds and ends.",
+        actions: [
+            {
+                ref: "map/kaeliasw",
+                description: "Exit"
+            }
+        ]
+    },
+    {
+        ref: "map/kaeliane",
+        group: "Chamomile Plains",
+        member: "Northeast Kaelia Town",
+        description: "Many enter town through the northeast corner, and also rest at the local inn.",
+        actions: [
+            {
+                ref: "map/chamomilearms",
+                preview: "Down the road is the Chamomile Arms, a local pub.",
+                description: "Enter the pub"
             },
             {
                 ref: "actors/jim",
                 preview: "You see a man.",
                 description: "Approach man"
+            },
+            {
+                ref: "map/lakelullabyne",
+                description: "Leave town and go east"
+            },
+            {
+                ref: "map/kaeliase",
+                description: "Go south"
             }
         ]
     },
     {
-        ref: "map/deepforest",
-        group: "Deep Forest",
-        description: "You're now in a dark part of the forest. It's darker and spookier.",
+        ref: "map/chamomilearms",
+        group: "Kaelia",
+        member: "The Chamomile Arms",
+        description: "Once you enter the pub, you immediately smell fresh food and drink, and hear lively conversation.",
         actions: [
             {
-                ref: "map/forest",
-                description: "Go west"
+                ref: "map/kaeliane",
+                description: "Exit"
+            }
+        ]
+    },
+    {
+        ref: "map/lakelullabyne",
+        group: "Chamomile Plains",
+        member: "Lake Lullaby, Northeast Shores",
+        description: "The shores of Lake Lullaby are always gentle, as though it were glass rather than water.",
+        actions: [
+            {
+                ref: "map/kaeliane",
+                description: "Go west into Kaelia Town"
             },
             {
                 ref: "actors/spider",

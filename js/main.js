@@ -79,7 +79,8 @@ var PlayerModal = React.createClass({
                 str: this.state.str,
                 dex: this.state.dex,
                 int: this.state.int,
-                chr: this.state.chr
+                chr: this.state.chr,
+                skillPoints: this.state.skillPoints
             });
         }
     },
@@ -217,7 +218,9 @@ var Header = React.createClass({
                     <div className="col-xs-8">
                         <div className="row panel panel-default">
                             <div className="panel-heading">
-                                <div className="panel-title">{this.props.context.group}</div>
+                                <div className="panel-title">
+                                    <h1>{this.props.context.member}&nbsp;<small>{this.props.context.group}</small></h1>
+                                </div>
                             </div>
                             <div className="panel-body messages">
                                 <p>{this.props.context.description}</p>
@@ -272,7 +275,7 @@ var Footer = React.createClass({
         return (
             <div className="container panel panel-default">
                 <div className="row panel-body">
-                    <div className="col-xs-12">Copyright 2016 Matt Fugere. All rights reserved.</div>
+                    <div className="col-xs-12 text-center">Copyright 2016 Matt Fugere. All rights reserved.</div>
                 </div>
             </div>
         );
