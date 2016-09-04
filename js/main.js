@@ -1,6 +1,9 @@
 "use strict";
 
 var GameModal = React.createClass({
+    newGame: function () {
+        this.props.onAction("options/newgame");
+    },
     render: function () {
         return (
             <div id="gameModal" className="modal fade">
@@ -10,7 +13,9 @@ var GameModal = React.createClass({
                         <div className="modal-header">
                             <h4 className="modal-title">Game Options</h4>
                         </div>
-                        <div className="modal-body">Test</div>
+                        <div className="modal-body">
+                            <button className="btn btn-default" onClick={this.newGame} data-dismiss="modal">New Game</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -27,6 +32,8 @@ var PlayerModal = React.createClass({
             chp: this.props.player.chp,
             mp: this.props.player.mp,
             cmp: this.props.player.cmp,
+            fp: this.props.player.fp,
+            cfp: this.props.player.cfp,
             crg: this.props.player.crg,
             str: this.props.player.str,
             dex: this.props.player.dex,
@@ -41,14 +48,16 @@ var PlayerModal = React.createClass({
     componentDidUpdate: function () {
         $("[class^=chr-]").hide();
         $("." + this.props.mode).show();
+        if (this.props.mode === "chr-view" && this.state.name !== this.props.player.name) this.setState(this.getInitialState()); 
     },
     onNameChange: function (e) {
         this.setState({ name: e.target.value });
         $(".error-name").hide();
     },
-    modStat: function (statName, stat, mod) {
+    modStat: function (statName, stat, mod, proxyMod) {
         var changes = {};
         changes[statName] = stat + mod;
+        changes[proxyMod] = (mod > 0) ? this.state[proxyMod] + 10 : this.state[proxyMod] - 10;
         changes["skillPoints"] = this.state.skillPoints - mod;
         this.setState(changes);
     },
@@ -75,7 +84,9 @@ var PlayerModal = React.createClass({
             this.props.updatePlayer({
                 name: this.state.name,
                 hp: this.state.hp,
-                mp: this.state.mp,
+                chp: this.state.hp,
+                cmp: this.state.cmp,
+                crg: this.state.crg,
                 str: this.state.str,
                 dex: this.state.dex,
                 int: this.state.int,
@@ -89,17 +100,17 @@ var PlayerModal = React.createClass({
             { name: "Skill points available", abbr: "skillPoints", attr: this.state.skillPoints, mod: false },
             { name: "Level", abbr: "level", attr: this.state.level, mod: false },
             { name: "Courage", abbr: "crg", attr: this.state.crg, mod: false },
-            { name: "Strength", abbr: "str", attr: this.state.str, mod: true },
-            { name: "Dexterity", abbr: "dex", attr: this.state.dex, mod: true },
-            { name: "Intelligence", abbr: "int", attr: this.state.int, mod: true },
-            { name: "Charisma", abbr: "chr", attr: this.state.chr, mod: true }
+            { name: "Strength", abbr: "str", attr: this.state.str, mod: true, proxyMod: "hp" },
+            { name: "Dexterity", abbr: "dex", attr: this.state.dex, mod: true, proxyMod: "fp" },
+            { name: "Intelligence", abbr: "int", attr: this.state.int, mod: true, proxyMod: "mp" },
+            { name: "Charisma", abbr: "chr", attr: this.state.chr, mod: true, proxyMod: "crg" }
         ];
         var statUI = statArr.map(function (stat, i) {
             var stripeClass = (i % 2 === 0) ? "evens" : "odds";
             var statUp = (this.state.skillPoints <= 0) ? "" :
-                (<button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, 1)}>+</button>);
+                (<button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, 1, stat.proxyMod)}>+</button>);
             var statDown = (stat.attr === this.props.player[stat.abbr]) ? "" :
-                (<button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, -1)}>-</button>);
+                (<button type="button" className="btn btn-default" onClick={this.modStat.bind(this, stat.abbr, stat.attr, -1, stat.proxyMod)}>-</button>);
             var modifiers = (!stat.mod) ? "" : (
                 <div className="chr-update col-xs-2">
                     {statDown}
@@ -150,6 +161,12 @@ var PlayerModal = React.createClass({
                                     <label className="col-xs-4 control-label">Magic points:&nbsp;</label>
                                     <div className="col-xs-2">
                                         <p className="form-control-static">{this.state.cmp + " / " + this.state.mp}</p>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="col-xs-4 control-label">Fatigue:&nbsp;</label>
+                                    <div className="col-xs-2">
+                                        <p className="form-control-static">{this.state.cfp + " / " + this.state.fp}</p>
                                     </div>
                                 </div>
                                 <div className="chr-create form-group">
@@ -236,7 +253,7 @@ var Header = React.createClass({
 });
 
 var Actions = React.createClass({
-    handleAction: function (ref) {
+    handleAction: function (ref, message) {
         if (ref === "..") ref = this.props.context.location;
         if (ref.indexOf(this.props.context.ref) !== -1) {
             if (ref.indexOf("battle") !== -1) this.props.battle();
@@ -246,14 +263,16 @@ var Actions = React.createClass({
                 this.props.showMessage(messageSet[0], messageSet[messageSet.length - 1]);
             }
         }
-        else this.props.onAction(ref);
+        else {
+            this.props.onAction(ref, message);
+        }
     },
     render: function () {
         var buttons = this.props.actions.map(function (action) {
             if (action.description) return (
                 <button className="btn btn-default btn-lg btn-block"
                         key={action.ref}
-                        onClick={this.handleAction.bind(this, action.ref)}>{action.description}
+                        onClick={this.handleAction.bind(this, action.ref, action.message)}>{action.description}
                 </button>
             );
         }, this);
@@ -289,8 +308,8 @@ var Game = React.createClass({
             actors: this.props.entities.actors,
             player: {
                 name: "",
-                hp: 20, mp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
-                level: 1, exp: 0, skillPoints: 0, chp: 20, cmp: 0,
+                hp: 20, mp: 0, fp: 20, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
+                level: 1, exp: 0, skillPoints: 0, chp: 20, cmp: 0, cfp: 20,
                 weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
                 armor: [
                     getMemberByRef(this.props.entities.objects, "objects/leatherarmor"),
@@ -328,6 +347,13 @@ var Game = React.createClass({
             });
         }
     },
+    componentDidUpdate: function () {
+        if (this.state.player.name === "" && this.state.mode === "chr-view") {
+            this.setState({ mode: "chr-create" }, function () {
+                this.openMenu("Player");
+            });
+        }
+    },
     updatePlayer: function (updates) {
         var player = this.state.player;
         for (var key in updates) {
@@ -360,11 +386,11 @@ var Game = React.createClass({
         }
         if (player.hp <= 0) {
             this.setState({ battling: false }, function () {
-                this.doAction("map/death");
+                this.doAction("map/real/death");
             });
         }
     },
-    doAction: function (ref) {
+    doAction: function (ref, prevMessage) {
         if (ref === "options/newgame") {
             this.setState(this.getInitialState());
             return;
@@ -433,8 +459,9 @@ var Game = React.createClass({
         }
         else {
             var splitRef = ref.split("/");
+            var newMessages = (prevMessage) ? [ prevMessage ] : [];
             var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
-            this.setState({ current: next, messages: [] });
+            this.setState({ current: next, messages: newMessages });
         }
         if (nextAction) (nextAction === "battle/enemy") ? this.enemyTurn(target) : this.doAction(nextAction);
     },
@@ -481,7 +508,7 @@ var Game = React.createClass({
                 <Header context={this.state.current} messages={this.state.messages} options={this.props.entities.options} openMenu={this.openMenu} />
                 <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} />
                 <Footer />
-                <GameModal />
+                <GameModal onAction={this.doAction} />
                 <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} mode={this.state.mode} />
             </div>
         );

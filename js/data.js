@@ -72,20 +72,108 @@ var objects = [
 
 var actors = [
     {
-        ref: "actors/jim",
-        group: "Jim",
-        description: "You see a man. He's wearing a baseball cap and has a wooden leg.",
-        location: "map/kaeliane",
+        ref: "actors/eannon",
+        member: "Eannon",
+        description: "The bartender of the Chamomile Arms is busy polishing glasses, as one would expect.",
+        location: "map/real/chamomilearms",
         dialog: [
             {
                 key: "intro",
-                value: "Hey buddy, my name is Jim!"
+                value: "Welcome to the Chamomile Arms, friend. Name's Eannon. Take a seat anywhere."
             }
         ],
         actions: [
             {
-                ref: "actors/jim/dialog/intro",
-                description: "Introduce yourself!"
+                ref: "actors/eannon/dialog/intro",
+                description: "Introduce yourself"
+            },
+            {
+                ref: "..",
+                description: "Walk away"
+            }
+        ]
+    },
+    {
+        ref: "actors/olis",
+        member: "Olis",
+        description: "The shopkeep smiles at you as you enter. He appears to have a shiny silver tooth.",
+        location: "map/real/kaeliagoods",
+        dialog: [
+            {
+                key: "intro",
+                value: "Cheers, mate. You'll find whatever you need here, so take a look around!"
+            }
+        ],
+        actions: [
+            {
+                ref: "actors/olis/dialog/intro",
+                description: "Introduce yourself"
+            },
+            {
+                ref: "..",
+                description: "Walk away"
+            }
+        ]
+    },
+    {
+        ref: "actors/zopha",
+        member: "Zopha",
+        description: "A shady-looking woman is leaning up against a house, glaring at passers by.",
+        location: "map/real/kaeliasw",
+        dialog: [
+            {
+                key: "intro",
+                value: "I don't know what you're thinking, but I ain't up to nothing."
+            }
+        ],
+        actions: [
+            {
+                ref: "actors/zopha/dialog/intro",
+                description: "Introduce yourself"
+            },
+            {
+                ref: "..",
+                description: "Walk away"
+            }
+        ]
+    },
+    {
+        ref: "actors/junia",
+        group: "Junia",
+        description: "You notice a girl pacing by the town wall, seemingly waiting for someone.",
+        location: "map/real/kaeliase",
+        dialog: [
+            {
+                key: "intro",
+                value: "Mind your own business, please."
+            }
+        ],
+        actions: [
+            {
+                ref: "actors/junia/dialog/intro",
+                description: "Introduce yourself"
+            },
+            {
+                ref: "..",
+                description: "Walk away"
+            }
+        ]
+    },
+    {
+        ref: "actors/felsie",
+        member: "Felsie",
+        description: "A local sellsword, Felsie, is at the grindstone, sharpening her blade.",
+        location: "map/real/kaeliane",
+        dialog: [
+            {
+                key: "intro",
+                value: "Hey there. Fancy a duel?"
+            }
+        ],
+        actions: [
+            {
+                ref: "actors/felsie/dialog/intro",
+                description: "Introduce yourself"
             },
             {
                 ref: "..",
@@ -95,9 +183,9 @@ var actors = [
     },
     {
         ref: "actors/spider",
-        group: "Spider",
+        member: "Spider",
         description: "A spider is crawling about.",
-        location: "map/lakelullabyne",
+        location: "map/real/lakelullabyne",
         battle: {
             hp: 10,
             str: 4,
@@ -151,113 +239,139 @@ var battleActions = [
 
 var map = [
     {
-        ref: "map/home",
+        ref: "map/real/home",
         group: "Kaelia",
         member: "Home",
         description: "You're home! You feel comfortable and safe here.",
         actions: [
             {
-                ref: "map/kaeliase",
+                ref: "map/dream/home",
+                preview: "Your bed looks inviting.",
+                description: "Go to bed",
+                message: "You wake up, feeling rested."
+            },
+            {
+                ref: "map/real/kaeliase",
                 description: "Exit"
             }
         ]
     },
     {
-        ref: "map/kaeliase",
+        ref: "map/real/kaeliase",
         group: "Chamomile Plains",
         member: "Southeast Kaelia Town",
         description: "Your hometown is nestled amidst rolling plains and a tranquil lake.",
         actions: [
             {
-                ref: "map/home",
+                ref: "map/real/home",
                 preview: "Your house looks as welcoming as ever.",
                 description: "Enter your house"
             },
             {
-                ref: "map/kaeliane",
+                ref: "actors/junia",
+                preview: "You see a woman.",
+                description: "Approach woman"
+            },
+            {
+                ref: "map/real/kaeliane",
                 description: "Go north"
             },
             {
-                ref: "map/kaeliasw",
+                ref: "map/real/kaeliasw",
                 description: "Go west"
             }
         ]
     },
     {
-        ref: "map/kaeliasw",
+        ref: "map/real/kaeliasw",
         group: "Chamomile Plains",
         member: "Southwest Kaelia Town",
         description: "The southeastern part of town is a bit busier, as many shops are here.",
         actions: [
             {
-                ref: "map/kaeliagoods",
+                ref: "map/real/kaeliagoods",
                 preview: "The Kaelia General Goods store is in the center of the town.",
                 description: "Enter the goods store"
             },
             {
-                ref: "map/kaeliase",
+                ref: "actors/zopha",
+                preview: "You see a woman.",
+                description: "Approach woman"
+            },
+            {
+                ref: "map/real/kaeliase",
                 description: "Go east"
             }
         ]
     },
     {
-        ref: "map/kaeliagoods",
+        ref: "map/real/kaeliagoods",
         group: "Kaelia",
         member: "Kaelia General Goods",
         description: "You enter the general goods store, where you can buy a number of odds and ends.",
         actions: [
             {
-                ref: "map/kaeliasw",
+                ref: "actors/olis",
+                preview: "You see the shopkeep.",
+                description: "Approach shopkeep"
+            },
+            {
+                ref: "map/real/kaeliasw",
                 description: "Exit"
             }
         ]
     },
     {
-        ref: "map/kaeliane",
+        ref: "map/real/kaeliane",
         group: "Chamomile Plains",
         member: "Northeast Kaelia Town",
         description: "Many enter town through the northeast corner, and also rest at the local inn.",
         actions: [
             {
-                ref: "map/chamomilearms",
+                ref: "map/real/chamomilearms",
                 preview: "Down the road is the Chamomile Arms, a local pub.",
                 description: "Enter the pub"
             },
             {
-                ref: "actors/jim",
-                preview: "You see a man.",
-                description: "Approach man"
+                ref: "actors/felsie",
+                preview: "You see a woman.",
+                description: "Approach woman"
             },
             {
-                ref: "map/lakelullabyne",
+                ref: "map/real/lakelullabyne",
                 description: "Leave town and go east"
             },
             {
-                ref: "map/kaeliase",
+                ref: "map/real/kaeliase",
                 description: "Go south"
             }
         ]
     },
     {
-        ref: "map/chamomilearms",
+        ref: "map/real/chamomilearms",
         group: "Kaelia",
         member: "The Chamomile Arms",
         description: "Once you enter the pub, you immediately smell fresh food and drink, and hear lively conversation.",
         actions: [
             {
-                ref: "map/kaeliane",
+                ref: "actors/eannon",
+                preview: "You see the inkeeper.",
+                description: "Approach inkeeper"
+            },
+            {
+                ref: "map/real/kaeliane",
                 description: "Exit"
             }
         ]
     },
     {
-        ref: "map/lakelullabyne",
+        ref: "map/real/lakelullabyne",
         group: "Chamomile Plains",
         member: "Lake Lullaby, Northeast Shores",
         description: "The shores of Lake Lullaby are always gentle, as though it were glass rather than water.",
         actions: [
             {
-                ref: "map/kaeliane",
+                ref: "map/real/kaeliane",
                 description: "Go west into Kaelia Town"
             },
             {
@@ -268,13 +382,26 @@ var map = [
         ]
     },
     {
-        ref: "map/death",
-        group: "You died!",
+        ref: "map/real/death",
+        group: "Game over",
+        member: "You died!",
         description: "Your eyelids draw shut as you gasp for your last breath of air. Remember that death is not the end, but only a transition.",
         actions: [
             {
                 ref: "options/newgame",
                 description: "Start a new game"
+            }
+        ]
+    },
+    {
+        ref: "map/dream/home",
+        group: "Kaelia",
+        member: "Home",
+        description: "You're home! You feel cold and uneasy.",
+        actions: [
+            {
+                ref: "map/real/kaeliase",
+                description: "Exit"
             }
         ]
     }
