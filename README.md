@@ -105,3 +105,7 @@ the bosses
 * Advanced character creation: quirks/fears, perks/motivators
 * Advanced NPC interaction
 * NPC goals
+
+## Technical Debt
+* Player status management: manage activeEffects centrally so multiple contributors (e.g. defending while fatigued) can be introduced/deleted as needed.
+* Data management: Move all data to the back end.
