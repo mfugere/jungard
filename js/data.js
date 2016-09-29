@@ -79,7 +79,10 @@ var actors = [
         dialog: [
             {
                 key: "intro",
-                value: "Welcome to the Chamomile Arms, friend. Name's Eannon. Take a seat anywhere."
+                value: "Good to see you again, {0}. Take a seat anywhere.",
+                props: [
+                    "player/name"
+                ]
             }
         ],
         actions: [
@@ -167,7 +170,10 @@ var actors = [
         dialog: [
             {
                 key: "intro",
-                value: "Hey there. Fancy a duel?"
+                value: "Hey there, {0}. Fancy a duel?",
+                props: [
+                    "player/name"
+                ]
             }
         ],
         actions: [
@@ -182,16 +188,39 @@ var actors = [
         ]
     },
     {
-        ref: "actors/spider",
-        member: "Spider",
-        description: "A spider is crawling about.",
+        ref: "actors/snail",
+        member: "Snail",
+        description: "A snail is crawling about.",
         location: "map/real/lakelullabyne",
         battle: {
             hp: 10,
             str: 4,
             ac: 10,
             init: 1,
-            exp: 100
+            exp: 20
+        },
+        actions: [
+            {
+                ref: "actors/snail/battle",
+                description: "Fight!"
+            },
+            {
+                ref: "..",
+                description: "Walk away"
+            }
+        ]
+    },
+    {
+        ref: "actors/spider",
+        member: "Spider",
+        description: "A spider is crawling about.",
+        location: "map/dream/lakelullabyne",
+        battle: {
+            hp: 10,
+            str: 4,
+            ac: 10,
+            init: 1,
+            exp: 20
         },
         actions: [
             {
@@ -375,9 +404,9 @@ var map = [
                 description: "Go west into Kaelia Town"
             },
             {
-                ref: "actors/spider",
-                preview: "You see a large spider.",
-                description: "Approach spider"
+                ref: "actors/snail",
+                preview: "You see a large snail.",
+                description: "Approach snail"
             }
         ]
     },
@@ -400,8 +429,108 @@ var map = [
         description: "You're home! You feel cold and uneasy.",
         actions: [
             {
-                ref: "map/real/kaeliase",
+                ref: "map/dream/kaeliase",
                 description: "Exit"
+            }
+        ]
+    },
+    {
+        ref: "map/dream/kaeliase",
+        group: "Chamomile Plains",
+        member: "Southeast Kaelia Town",
+        description: "Your hometown is nestled amidst foggy plains and a tumultuous lake.",
+        actions: [
+            {
+                ref: "map/dream/home",
+                preview: "Your house looks as welcoming as ever.",
+                description: "Enter your house"
+            },
+            {
+                ref: "map/dream/kaeliane",
+                description: "Go north"
+            },
+            {
+                ref: "map/dream/kaeliasw",
+                description: "Go west"
+            }
+        ]
+    },
+    {
+        ref: "map/dream/kaeliasw",
+        group: "Chamomile Plains",
+        member: "Southwest Kaelia Town",
+        description: "The southeastern part of town has some broken-down shops. You hear a dull hum from nowhere in particular here. It doesn't sound human.",
+        actions: [
+            {
+                ref: "map/dream/kaeliagoods",
+                preview: "The Kaelia General Goods store is in the center of the town.",
+                description: "Enter the goods store"
+            },
+            {
+                ref: "map/dream/kaeliase",
+                description: "Go east"
+            }
+        ]
+    },
+    {
+        ref: "map/dream/kaeliagoods",
+        group: "Kaelia",
+        member: "Kaelia General Goods",
+        description: "You enter the general goods store, where you can buy a number of odds and ends.",
+        actions: [
+            {
+                ref: "map/dream/kaeliasw",
+                description: "Exit"
+            }
+        ]
+    },
+    {
+        ref: "map/dream/kaeliane",
+        group: "Chamomile Plains",
+        member: "Northeast Kaelia Town",
+        description: "A warm gust blows through the northeast gates.",
+        actions: [
+            {
+                ref: "map/dream/chamomilearms",
+                preview: "Down the road is the Chamomile Arms, a local pub.",
+                description: "Enter the pub"
+            },
+            {
+                ref: "map/dream/lakelullabyne",
+                description: "Leave town and go east"
+            },
+            {
+                ref: "map/dream/kaeliase",
+                description: "Go south"
+            }
+        ]
+    },
+    {
+        ref: "map/dream/chamomilearms",
+        group: "Kaelia",
+        member: "The Chamomile Arms",
+        description: "Once you enter the pub, you immediately hear grumbling and loud coughing. You feel a sickness in the air.",
+        actions: [
+            {
+                ref: "map/dream/kaeliane",
+                description: "Exit"
+            }
+        ]
+    },
+    {
+        ref: "map/dream/lakelullabyne",
+        group: "Chamomile Plains",
+        member: "Lake Lullaby, Northeast Shores",
+        description: "The shores of Lake Lullaby are always rough, as though something below the opaque waves is incredibly restless.",
+        actions: [
+            {
+                ref: "map/dream/kaeliane",
+                description: "Go west into Kaelia Town"
+            },
+            {
+                ref: "actors/spider",
+                preview: "You see a large spider.",
+                description: "Approach spider"
             }
         ]
     }

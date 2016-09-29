@@ -483,7 +483,7 @@ var Game = React.createClass({
             var splitRef = ref.split("/");
             var newMessages = (prevMessage) ? [ prevMessage ] : [];
             var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
-            if (next.indexOf("dream") !== -1 && this.state.current.ref.indexOf("real") !== -1) {
+            if (next.ref.indexOf("dream") !== -1 && this.state.current.ref.indexOf("real") !== -1) {
                 player.chp = player.hp;
                 player.cmp = player.mp;
                 player.cfp = player.fp;
@@ -509,6 +509,20 @@ var Game = React.createClass({
         for (var i in property) {
             if (property[i].key === key) {
                 if (values !== undefined) addMessages([ interpolate(property[i].value, values) ]);
+                else if (property[i].props) {
+                    var propsValues = [];
+                    for (var j in property[i].props) {
+                        var objRef = property[i].props[j].split("/");
+                        var objValue = this.state[objRef[0]];
+                        if (objRef.length > 1) {
+                            for (var k = 1; k < objRef.length; k++) {
+                                objValue = objValue[objRef[k]];
+                            }
+                        }
+                        propsValues.push(objValue);
+                    }
+                    this.addMessages([ interpolate(property[i].value, propsValues) ]);
+                }
                 else this.addMessages([ property[i].value ]);
             }
         }
