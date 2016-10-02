@@ -260,7 +260,7 @@ var Actions = React.createClass({
             else {
                 var message = ref.replace(this.props.context.ref, "").substring(1);
                 var messageSet = message.split("/");
-                this.props.showMessage(messageSet[0], messageSet[messageSet.length - 1]);
+                this.props.showMessage(messageSet[0], parseInt(messageSet[messageSet.length - 1]));
             }
         }
         else {
@@ -349,6 +349,7 @@ var Game = React.createClass({
     },
     componentDidUpdate: function () {
         var player = this.state.player;
+        var messages = this.state.messages;
         if (player.cfp < 0) {
             if (player.activeEffects.status !== "dreaming") {
                 player.cfp = 0;
@@ -356,7 +357,6 @@ var Game = React.createClass({
                     player.activeEffects.ac -= 5;
                     player.activeEffects.attackRoll -= 5;
                     player.activeEffects.status = "fatigued";
-                    var messages = this.state.messages;
                     messages.push("You feel tired. You should get to bed.");
                 }
             } else {
@@ -397,7 +397,7 @@ var Game = React.createClass({
         }
         for (var i in this.props.entities.battle) {
             if (this.props.entities.battle[i].ref === "battle/hit") {
-                this.addMessages([ interpolate(this.props.entities.battle[i].value, [ enemy.group, hitStatus ]) ]);
+                this.addMessages([ interpolate(this.props.entities.battle[i].value, [ enemy.member, hitStatus ]) ]);
             }
         }
         if (player.hp <= 0) {
@@ -440,7 +440,7 @@ var Game = React.createClass({
                     } else {
                         hitStatus = "miss!";
                     }
-                    messages.push(interpolate(actionMessage, [ target.group, hitStatus ]));
+                    messages.push(interpolate(actionMessage, [ target.member, hitStatus ]));
                     break;
                 case "battle/defend":
                     player.activeEffects.ac = 2;
@@ -455,7 +455,7 @@ var Game = React.createClass({
                     break;
                 case "battle/win":
                     player.exp += target.battle.exp;
-                    messages.push(interpolate(actionMessage, [ target.group, target.battle.exp ]));
+                    messages.push(interpolate(actionMessage, [ target.member, target.battle.exp ]));
                     if (player.exp >= levelUpExp) {
                         player.level += 1;
                         player.skillPoints += levelUpPoints;
@@ -505,27 +505,24 @@ var Game = React.createClass({
         }
     },
     showMessage: function (table, key, values) {
-        var property = this.state.current[table];
-        for (var i in property) {
-            if (property[i].key === key) {
-                if (values !== undefined) addMessages([ interpolate(property[i].value, values) ]);
-                else if (property[i].props) {
-                    var propsValues = [];
-                    for (var j in property[i].props) {
-                        var objRef = property[i].props[j].split("/");
-                        var objValue = this.state[objRef[0]];
-                        if (objRef.length > 1) {
-                            for (var k = 1; k < objRef.length; k++) {
-                                objValue = objValue[objRef[k]];
-                            }
-                        }
-                        propsValues.push(objValue);
+        var property = this.state.current[table][key];
+        if (values !== undefined) addMessages([ interpolate(property[i].value, values) ]);
+        else if (property.props) {
+            var propsValues = [];
+            for (var j in property.props) {
+                var objRef = property.props[j].split("/");
+                var objValue = this.state[objRef[0]];
+                if (objRef.length > 1) {
+                    for (var k = 1; k < objRef.length; k++) {
+                        objValue = objValue[objRef[k]];
                     }
-                    this.addMessages([ interpolate(property[i].value, propsValues) ]);
                 }
-                else this.addMessages([ property[i].value ]);
+                propsValues.push(objValue);
             }
+            this.addMessages([ interpolate(property.value, propsValues) ]);
         }
+        else this.addMessages([ property.value ]);
+        this.setState({ dialog: property.answers });
     },
     addMessages: function (messages) {
         this.setState(function(prev, props) {
@@ -545,7 +542,9 @@ var Game = React.createClass({
         $("#" + modalName + "Modal").modal({ backdrop: "static", keyboard: false });
     },
     render: function () {
-        var actions = (this.state.battling) ? this.props.entities.battle : this.state.current.actions;
+        var actions = this.state.current.actions;
+        if (this.state.battling) actions = this.props.entities.battle
+        else if (this.state.dialog) actions = this.state.dialog;
         return (
             <div>
                 <Header context={this.state.current} messages={this.state.messages} options={this.props.entities.options} openMenu={this.openMenu} />

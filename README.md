@@ -23,7 +23,6 @@ How will the people of Jungard go on like this? They've always
 prevailed over hardship, but how can you conquer what is not real?
 
 ## Concepts
-* Gender/sexless character creation, but maybe pronouns
 * Methods of interaction based on quirks/perks (GURPS-like)
 * Maybe also specify fears which determine where you start in the
 dream world and what the enemies are like

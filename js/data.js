@@ -78,7 +78,6 @@ var actors = [
         location: "map/real/chamomilearms",
         dialog: [
             {
-                key: "intro",
                 value: "Good to see you again, {0}. Take a seat anywhere.",
                 props: [
                     "player/name"
@@ -87,7 +86,7 @@ var actors = [
         ],
         actions: [
             {
-                ref: "actors/eannon/dialog/intro",
+                ref: "actors/eannon/dialog/0",
                 description: "Introduce yourself"
             },
             {
@@ -103,13 +102,12 @@ var actors = [
         location: "map/real/kaeliagoods",
         dialog: [
             {
-                key: "intro",
                 value: "Cheers, mate. You'll find whatever you need here, so take a look around!"
             }
         ],
         actions: [
             {
-                ref: "actors/olis/dialog/intro",
+                ref: "actors/olis/dialog/0",
                 description: "Introduce yourself"
             },
             {
@@ -125,13 +123,21 @@ var actors = [
         location: "map/real/kaeliasw",
         dialog: [
             {
-                key: "intro",
-                value: "I don't know what you're thinking, but I ain't up to nothing."
+                value: "I don't know what you're thinking, but I ain't up to nothing.",
+                answers: [
+                    {
+                        description: "Sorry, just texting this dialog feature.",
+                        ref: "actors/zopha/dialog/1"
+                    }
+                ]
+            },
+            {
+                value: "Yeah, works fine. Now get outta here."
             }
         ],
         actions: [
             {
-                ref: "actors/zopha/dialog/intro",
+                ref: "actors/zopha/dialog/0",
                 description: "Introduce yourself"
             },
             {
@@ -147,13 +153,12 @@ var actors = [
         location: "map/real/kaeliase",
         dialog: [
             {
-                key: "intro",
                 value: "Mind your own business, please."
             }
         ],
         actions: [
             {
-                ref: "actors/junia/dialog/intro",
+                ref: "actors/junia/dialog/0",
                 description: "Introduce yourself"
             },
             {
@@ -169,7 +174,6 @@ var actors = [
         location: "map/real/kaeliane",
         dialog: [
             {
-                key: "intro",
                 value: "Hey there, {0}. Fancy a duel?",
                 props: [
                     "player/name"
@@ -178,7 +182,7 @@ var actors = [
         ],
         actions: [
             {
-                ref: "actors/felsie/dialog/intro",
+                ref: "actors/felsie/dialog/0",
                 description: "Introduce yourself"
             },
             {
@@ -239,29 +243,24 @@ var battleActions = [
     {
         ref: "battle/attack",
         description: "Attack",
-        key: "attack",
         value: "You attack the {0} and {1}"
     },
     {
         ref: "battle/defend",
         description: "Defend",
-        key: "defend",
         value: "You hunker down."
     },
     {
         ref: "battle/flee",
         description: "Flee",
-        key: "flee",
         value: "You run away!"
     },
     {
         ref: "battle/hit",
-        key: "hit",
         value: "The {0} attacks you and {1}"
     },
     {
         ref: "battle/win",
-        key: "win",
         value: "You defeated the {0}! You obtained {1} experience points."
     }
 ];
