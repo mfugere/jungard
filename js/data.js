@@ -34,6 +34,24 @@ var options = [
     }
 ];
 
+var statusEffects = [
+    {
+        ref: "status/defending",
+        description: "You hunker down.",
+        effects: { dex: 2 }
+    },
+    {
+        ref: "status/fatigued",
+        description: "Fatigue sets in. You feel weaker, both mentally and physically.",
+        effects: {
+            str: -2,
+            dex: -2,
+            int: -2,
+            cha: -2
+        }
+    }
+];
+
 var objects = [
     {
         ref: "objects/shortsword",
@@ -68,7 +86,7 @@ var objects = [
             }
         ]
     }
-]
+];
 
 var actors = [
     {

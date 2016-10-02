@@ -315,9 +315,9 @@ var Game = React.createClass({
                     getMemberByRef(this.props.entities.objects, "objects/leatherarmor"),
                     getMemberByRef(this.props.entities.objects, "objects/leatherboots")
                 ],
-                activeEffects: {},
-                ac: function () {
-                    var totalAc = this.dex;
+                activeStatus: [],
+                ac: function (modifiers) {
+                    var totalAc = this.dex + (modifiers["dex"] || 0);
                     for (var i in this.armor) {
                         for (var j in this.armor[i].stats) {
                             if (this.armor[i].stats[j].key === "Defense") totalAc += this.armor[i].stats[j].value;
@@ -351,14 +351,13 @@ var Game = React.createClass({
         var player = this.state.player;
         var messages = this.state.messages;
         if (player.cfp < 0) {
-            if (player.activeEffects.status !== "dreaming") {
+            if (this.state.current.ref.indexOf("dream") === -1) {
                 player.cfp = 0;
-                if (player.activeEffects.status !== "fatigued") {
-                    player.activeEffects.ac -= 5;
-                    player.activeEffects.attackRoll -= 5;
-                    player.activeEffects.status = "fatigued";
-                    messages.push("You feel tired. You should get to bed.");
+                if (player.activeStatus.indexOf("fatigued") === -1) {
+                    player.activeStatus.push("fatigued");
+                    messages.push(getMemberByRef(this.props.entities.status, "status/fatigued").description);
                 }
+                else messages.push("You feel tired. You should get to bed.");
             } else {
                 player.cfp = player.fp;
             }
@@ -382,19 +381,17 @@ var Game = React.createClass({
     enemyTurn: function (enemy) {
         var hitStatus = "";
         var player = this.state.player;
-        var playerAc = player.ac();
-        if (player.activeEffects.ac) {
-            playerAc += player.activeEffects.ac;
-            delete player.activeEffects.ac; // WRONG WRONG WRONG
-        }
+        var playerAc = player.ac(this.getModifiers());
+        if (player.activeStatus.indexOf("defending") !== -1)
+            player.activeStatus.splice(player.activeStatus.indexOf("defending"), 1);
         if (diceRoll(20) >= playerAc) {
             var playerDamage = diceRoll(enemy.battle.str);
             player.chp -= playerDamage;
-            this.setState({ player: player });
             hitStatus = "does " + playerDamage + " points of damage.";
         } else {
             hitStatus = "misses!";
         }
+        this.setState({ player: player });
         for (var i in this.props.entities.battle) {
             if (this.props.entities.battle[i].ref === "battle/hit") {
                 this.addMessages([ interpolate(this.props.entities.battle[i].value, [ enemy.member, hitStatus ]) ]);
@@ -426,9 +423,8 @@ var Game = React.createClass({
             switch (ref) {
                 case "battle/attack":
                     var hitStatus = "";
-                    if (diceRoll(20) + this.state.player.str >= target.battle.ac) {
+                    if (diceRoll(20) + (this.state.player.str + (this.getModifiers()["str"] || 0)) >= target.battle.ac) {
                         var attRoll = this.state.player.attackRoll();
-                        if (this.state.player.activeEffects.attackRoll) attRoll += this.state.player.activeEffects.attackRoll;
                         var enemyDamage = diceRoll(attRoll);
                         target.battle.hp -= enemyDamage;
                         player.cfp -= 1;
@@ -443,10 +439,10 @@ var Game = React.createClass({
                     messages.push(interpolate(actionMessage, [ target.member, hitStatus ]));
                     break;
                 case "battle/defend":
-                    player.activeEffects.ac = 2;
+                    player.activeStatus.push("defending");
+                    messages.push(getMemberByRef(this.props.entities.status, "status/defending").description);
                     player.cfp -= 1;
                     this.setState({ player: player });
-                    messages.push(actionMessage);
                     break;
                 case "battle/flee":
                     player.cfp -= 2;
@@ -487,8 +483,7 @@ var Game = React.createClass({
                 player.chp = player.hp;
                 player.cmp = player.mp;
                 player.cfp = player.fp;
-                player.activeEffects = {};
-                player.activeEffects.status = "dreaming";
+                player.activeStatus.splice(player.activeStatus.indexOf("fatigued"), 1);
             }
             this.setState({ current: next, messages: newMessages, player: player });
         }
@@ -530,6 +525,19 @@ var Game = React.createClass({
             return { messages: newMessages };
         });
     },
+    getModifiers: function () {
+        var modifiers = {};
+        var active = this.state.player.activeStatus;
+        for (var i in active) {
+            var statusData = getMemberByRef(this.props.entities.status, "status/" + active[i]);
+            var objKeys = Object.keys(statusData.effects);
+            for (var j in objKeys) {
+                if (modifiers[objKeys[j]]) modifiers[objKeys[j]] += statusData[objKeys[j]];
+                else modifiers[objKeys[j]] = statusData[objKeys[j]];
+            }
+        }
+        return modifiers;
+    },
     battle: function () {
         this.setState({ battling: !this.state.battling }, function () {
             var tInit = diceRoll(20) + this.state.current.battle.init;
@@ -558,6 +566,6 @@ var Game = React.createClass({
 });
 
 ReactDOM.render(
-    <Game entities={{ options: options, objects: objects, battle: battleActions, actors: actors, map: map }} />,
+    <Game entities={{ options: options, status: statusEffects, objects: objects, battle: battleActions, actors: actors, map: map }} />,
     document.getElementById("game")
 );
