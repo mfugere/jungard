@@ -397,9 +397,11 @@ var Game = React.createClass({
                 this.addMessages([ interpolate(this.props.entities.battle[i].value, [ enemy.member, hitStatus ]) ]);
             }
         }
-        if (player.hp <= 0) {
-            this.setState({ battling: false }, function () {
-                this.doAction("map/real/death");
+        if (player.chp <= 0) {
+            var realOrDream = (this.state.current.ref.indexOf("real") === -1) ? "dream" : "real";
+            player.chp = player.hp;
+            this.setState({ battling: false, player: player }, function () {
+                this.doAction("map/" + realOrDream + "/death");
             });
         }
     },

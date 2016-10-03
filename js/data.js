@@ -550,5 +550,17 @@ var map = [
                 description: "Approach spider"
             }
         ]
-    }
+    },
+    {
+        ref: "map/dream/death",
+        group: "Dream over",
+        member: "You died!",
+        description: "Your eyelids draw shut as you gasp for your last breath of air. Remember that death is not the end, but only a transition.",
+        actions: [
+            {
+                ref: "map/real/home",
+                description: "Wake up"
+            }
+        ]
+    },
 ];
