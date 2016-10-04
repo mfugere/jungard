@@ -30,19 +30,13 @@ var GameModal = React.createClass({
 var PlayerModal = React.createClass({
     getInitialState: function () {
         return {
-            name: this.props.player.name,
-            level: this.props.player.level,
-            hp: this.props.player.hp,
-            chp: this.props.player.hp,
-            mp: this.props.player.mp,
-            cmp: this.props.player.mp,
-            fp: this.props.player.fp,
-            cfp: this.props.player.fp,
-            crg: this.props.player.crg,
-            str: this.props.player.str,
-            dex: this.props.player.dex,
-            int: this.props.player.int,
-            chr: this.props.player.chr,
+            name: this.props.player.name, level: this.props.player.level,
+            hp: this.props.player.hp, chp: this.props.player.chp,
+            mp: this.props.player.mp, cmp: this.props.player.cmp,
+            fp: this.props.player.fp, cfp: this.props.player.cfp,
+            crg: this.props.player.crg, ccrg: this.props.player.ccrg,
+            str: this.props.player.str, dex: this.props.player.dex,
+            int: this.props.player.int, chr: this.props.player.chr,
             skillPoints: this.props.player.skillPoints
         };
     },
@@ -68,10 +62,10 @@ var PlayerModal = React.createClass({
     rollStats: function () {
         $(".error-stats").hide();
         var newStats = {
-            str: Math.floor(Math.random() * 6),
-            dex: Math.floor(Math.random() * 6),
-            int: Math.floor(Math.random() * 6),
-            chr: Math.floor(Math.random() * 6)
+            str: Math.floor(Math.random() * 4),
+            dex: Math.floor(Math.random() * 4),
+            int: Math.floor(Math.random() * 4),
+            chr: Math.floor(Math.random() * 4)
         };
         newStats.hp = 10 + (newStats.str * 10);
         newStats.mp = newStats.int * 10;
@@ -92,30 +86,25 @@ var PlayerModal = React.createClass({
         if (valid) {
             this.props.updatePlayer({
                 name: this.state.name,
-                hp: this.state.hp,
-                chp: this.state.hp,
-                mp: this.state.mp,
-                cmp: this.state.cmp,
-                fp: this.state.fp,
-                cfp: this.state.hp,
-                crg: this.state.crg,
-                str: this.state.str,
-                dex: this.state.dex,
-                int: this.state.int,
-                chr: this.state.chr,
+                hp: this.state.hp, chp: this.state.hp, mp: this.state.mp, cmp: this.state.mp,
+                fp: this.state.fp, cfp: this.state.fp, crg: this.state.crg, ccrg: this.state.crg,
+                str: this.state.str, dex: this.state.dex,int: this.state.int,chr: this.state.chr,
                 skillPoints: this.state.skillPoints
             });
         }
     },
     render: function () {
         var statArr = [
-            { name: "Skill points available", abbr: "skillPoints", attr: this.state.skillPoints, mod: false },
-            { name: "Level", abbr: "level", attr: this.state.level, mod: false },
-            { name: "Courage", abbr: "crg", attr: this.state.crg, mod: false },
-            { name: "Strength", abbr: "str", attr: this.state.str, mod: true, proxyMod: "hp" },
-            { name: "Dexterity", abbr: "dex", attr: this.state.dex, mod: true, proxyMod: "fp" },
-            { name: "Intelligence", abbr: "int", attr: this.state.int, mod: true, proxyMod: "mp" },
-            { name: "Charisma", abbr: "chr", attr: this.state.chr, mod: true, proxyMod: "crg" }
+            { name: "Skill points available", abbr: "skillPoints", attr: this.state.skillPoints, mod: false, canLose: false },
+            { name: "Level", abbr: "level", attr: this.state.level, mod: false, canLose: false },
+            { name: "Hit points", abbr: "hp", attr: this.state.hp, mod: false, canLose: true },
+            { name: "Magic points", abbr: "mp", attr: this.state.mp, mod: false, canLose: true },
+            { name: "Fatigue", abbr: "fp", attr: this.state.fp, mod: false, canLose: true },
+            { name: "Courage", abbr: "crg", attr: this.state.crg, mod: false, canLose: true },
+            { name: "Strength", abbr: "str", attr: this.state.str, mod: true, canLose: false, proxyMod: "hp" },
+            { name: "Dexterity", abbr: "dex", attr: this.state.dex, mod: true, canLose: false, proxyMod: "fp" },
+            { name: "Intelligence", abbr: "int", attr: this.state.int, mod: true, canLose: false, proxyMod: "mp" },
+            { name: "Charisma", abbr: "chr", attr: this.state.chr, mod: true, canLose: false, proxyMod: "crg" }
         ];
         var statUI = statArr.map(function (stat, i) {
             var stripeClass = (i % 2 === 0) ? "evens" : "odds";
@@ -128,12 +117,13 @@ var PlayerModal = React.createClass({
                     {statDown}
                     {statUp}
                 </div>
-            )
+            );
+            var currentStat = (!stat.canLose) ? "" : this.state["c" + stat.abbr] + " / ";
             return (
                 <div key={stat.abbr + "Key"} className={stripeClass + " form-group"}>
                     <label className="col-xs-4 control-label">{stat.name}:&nbsp;</label>
                     <div className="col-xs-2">
-                        <p className="form-control-static">{stat.attr}</p>
+                        <p className="form-control-static">{currentStat}{stat.attr}</p>
                     </div>
                     {modifiers}
                 </div>
@@ -162,25 +152,6 @@ var PlayerModal = React.createClass({
                                     </div>
                                 </div>
                                 {statUI}
-                                <hr />
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Hit points:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.chp + " / " + this.state.hp}</p>
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Magic points:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.cmp + " / " + this.state.mp}</p>
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label className="col-xs-4 control-label">Fatigue:&nbsp;</label>
-                                    <div className="col-xs-2">
-                                        <p className="form-control-static">{this.state.cfp + " / " + this.state.fp}</p>
-                                    </div>
-                                </div>
                                 <div className="chr-create form-group">
                                     <div className="row">
                                         <div className="col-xs-offset-4 col-xs-8">
@@ -322,7 +293,7 @@ var Game = React.createClass({
             player: {
                 name: "",
                 hp: 0, mp: 0, fp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
-                level: 1, exp: 0, skillPoints: 0, chp: 0, cmp: 0, cfp: 0,
+                level: 1, exp: 0, skillPoints: 0, chp: 0, cmp: 0, cfp: 0, ccrg: 0,
                 weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
                 armor: [
                     getMemberByRef(this.props.entities.objects, "objects/leatherarmor"),
@@ -398,6 +369,7 @@ var Game = React.createClass({
         if (player.activeStatus.indexOf("defending") !== -1)
             player.activeStatus.splice(player.activeStatus.indexOf("defending"), 1);
         if (diceRoll(20) >= playerAc) {
+            player.ccrg -= 2;
             var playerDamage = diceRoll(enemy.battle.str);
             player.chp -= playerDamage;
             hitStatus = "does " + playerDamage + " points of damage.";
@@ -431,6 +403,7 @@ var Game = React.createClass({
             var actors = this.state.actors;
             var target = this.state.current;
             var player = this.state.player;
+            if (ref.indexOf("dream") === -1) player.cfp -= 1;
             for (var i in this.props.entities.battle) {
                 if (this.props.entities.battle[i].ref === ref) {
                     actionMessage = this.props.entities.battle[i].value
@@ -440,10 +413,11 @@ var Game = React.createClass({
                 case "battle/attack":
                     var hitStatus = "";
                     if (diceRoll(20) + (this.state.player.str + (this.getModifiers()["str"] || 0)) >= target.battle.ac) {
+                        player.ccrg += 1;
+                        if (player.ccrg > player.crg) player.ccrg = player.crg;
                         var attRoll = this.state.player.attackRoll();
                         var enemyDamage = diceRoll(attRoll);
                         target.battle.hp -= enemyDamage;
-                        player.cfp -= 1;
                         this.setState({ actors: actors, player: player });
                         hitStatus = "do " + enemyDamage + " points of damage.";
                         if (target.battle.hp <= 0) {
@@ -457,22 +431,21 @@ var Game = React.createClass({
                 case "battle/defend":
                     player.activeStatus.push("defending");
                     messages.push(getMemberByRef(this.props.entities.status, "status/defending").description);
-                    player.cfp -= 1;
                     this.setState({ player: player });
                     break;
                 case "battle/flee":
-                    player.cfp -= 2;
                     this.setState({ current: getMemberByRef(this.state.map, target.location), battling: false });
                     messages.push(actionMessage);
                     break;
                 case "battle/win":
                     player.exp += target.battle.exp;
+                    player.ccrg += (ref.indexOf("dream") === -1) ? 1 : 2;
+                    if (player.ccrg > player.crg) player.ccrg = player.crg;
                     messages.push(interpolate(actionMessage, [ target.member, target.battle.exp ]));
                     if (player.exp >= levelUpExp) {
                         player.level += 1;
                         player.skillPoints += levelUpPoints;
                         player.exp = player.exp % levelUpExp;
-                        player.chp = player.hp;
                         messages.push("You've ascended to Level " + player.level + "!");
                         this.setState({ mode: "chr-update" }, function () {
                             this.openMenu("Player");
@@ -491,7 +464,7 @@ var Game = React.createClass({
         }
         else {
             var player = this.state.player;
-            player.cfp -= 1;
+            if (ref.indexOf("dream") === -1) player.cfp -= 1;
             var splitRef = ref.split("/");
             var newMessages = (prevMessage) ? [ prevMessage ] : [];
             var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
@@ -502,9 +475,11 @@ var Game = React.createClass({
                     player.cfp = player.fp;
                     player.timeOfSleep = this.state.time;
                     player.activeStatus.splice(player.activeStatus.indexOf("fatigued"), 1);
-                } else if (timeDifference(this.state.time, player.timeOfSleep) >= 8) {
+                } else if (timeDifference(this.state.time, player.timeOfSleep) >= 8 || player.ccrg <= 0) {
+                    player.cfp = player.ccrg + (player.fp / 2);
+                    if (player.cfp > player.fp) player.cfp = player.fp;
                     next = getMemberByRef(this.props.entities.map, "map/real/home");
-                    newMessages.push("You wake up, feeling rested.");
+                    newMessages.push("You wake up.");
                 }
             }
             this.setState({ current: next, messages: newMessages, player: player });
