@@ -33,11 +33,11 @@ var PlayerModal = React.createClass({
             name: this.props.player.name,
             level: this.props.player.level,
             hp: this.props.player.hp,
-            chp: this.props.player.chp,
+            chp: this.props.player.hp,
             mp: this.props.player.mp,
-            cmp: this.props.player.cmp,
+            cmp: this.props.player.mp,
             fp: this.props.player.fp,
-            cfp: this.props.player.cfp,
+            cfp: this.props.player.fp,
             crg: this.props.player.crg,
             str: this.props.player.str,
             dex: this.props.player.dex,
@@ -67,12 +67,17 @@ var PlayerModal = React.createClass({
     },
     rollStats: function () {
         $(".error-stats").hide();
-        this.setState({
+        var newStats = {
             str: Math.floor(Math.random() * 6),
             dex: Math.floor(Math.random() * 6),
             int: Math.floor(Math.random() * 6),
-            chr: Math.floor(Math.random() * 6),
-        });
+            chr: Math.floor(Math.random() * 6)
+        };
+        newStats.hp = 10 + (newStats.str * 10);
+        newStats.mp = newStats.int * 10;
+        newStats.fp = 10 + (newStats.dex * 10);
+        newStats.crg = newStats.chr * 10;
+        this.setState(newStats);
     },
     save: function () {
         var valid = true;
@@ -89,7 +94,10 @@ var PlayerModal = React.createClass({
                 name: this.state.name,
                 hp: this.state.hp,
                 chp: this.state.hp,
+                mp: this.state.mp,
                 cmp: this.state.cmp,
+                fp: this.state.fp,
+                cfp: this.state.hp,
                 crg: this.state.crg,
                 str: this.state.str,
                 dex: this.state.dex,
@@ -313,8 +321,8 @@ var Game = React.createClass({
             actors: this.props.entities.actors,
             player: {
                 name: "",
-                hp: 20, mp: 0, fp: 20, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
-                level: 1, exp: 0, skillPoints: 0, chp: 20, cmp: 0, cfp: 20,
+                hp: 0, mp: 0, fp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
+                level: 1, exp: 0, skillPoints: 0, chp: 0, cmp: 0, cfp: 0,
                 weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
                 armor: [
                     getMemberByRef(this.props.entities.objects, "objects/leatherarmor"),
