@@ -20,3 +20,9 @@ var interpolate = function (string, values) {
     }
     return string;
 };
+
+var timeDifference = function (t1, t2) {
+    if (t1 - t2 < 0) {
+        return 24 - t2 + t1;
+    } else return t1 - t2;
+};

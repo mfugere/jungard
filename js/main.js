@@ -5,6 +5,9 @@ var GameModal = React.createClass({
         this.props.onAction("options/newgame");
     },
     render: function () {
+        var timeHrs = Math.floor(this.props.time);
+        var timeMins = (this.props.time % timeHrs) * 60;
+        var curTime = timeHrs.toString() + ":" + ((timeMins === 0) ? "00" : timeMins.toString());
         return (
             <div id="gameModal" className="modal fade">
                 <div className="modal-dialog">
@@ -14,6 +17,7 @@ var GameModal = React.createClass({
                             <h4 className="modal-title">Game Options</h4>
                         </div>
                         <div className="modal-body">
+                            <p><b>Current time</b>:&nbsp;{curTime}</p>
                             <button className="btn btn-default" onClick={this.newGame} data-dismiss="modal">New Game</button>
                         </div>
                     </div>
@@ -304,6 +308,7 @@ var Footer = React.createClass({
 var Game = React.createClass({
     getInitialState: function () {
         return {
+            time: 6.0,
             map: this.props.entities.map,
             actors: this.props.entities.actors,
             player: {
@@ -406,6 +411,7 @@ var Game = React.createClass({
         }
     },
     doAction: function (ref, prevMessage) {
+        this.setState({ time: this.state.time + 0.25 });
         if (ref === "options/newgame") {
             this.setState(this.getInitialState());
             return;
@@ -481,11 +487,17 @@ var Game = React.createClass({
             var splitRef = ref.split("/");
             var newMessages = (prevMessage) ? [ prevMessage ] : [];
             var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
-            if (next.ref.indexOf("dream") !== -1 && this.state.current.ref.indexOf("real") !== -1) {
-                player.chp = player.hp;
-                player.cmp = player.mp;
-                player.cfp = player.fp;
-                player.activeStatus.splice(player.activeStatus.indexOf("fatigued"), 1);
+            if (next.ref.indexOf("dream") !== -1) {
+                if (this.state.current.ref.indexOf("real") !== -1) {
+                    player.chp = player.hp;
+                    player.cmp = player.mp;
+                    player.cfp = player.fp;
+                    player.timeOfSleep = this.state.time;
+                    player.activeStatus.splice(player.activeStatus.indexOf("fatigued"), 1);
+                } else if (timeDifference(this.state.time, player.timeOfSleep) >= 8) {
+                    next = getMemberByRef(this.props.entities.map, "map/real/home");
+                    newMessages.push("You wake up, feeling rested.");
+                }
             }
             this.setState({ current: next, messages: newMessages, player: player });
         }
@@ -560,7 +572,7 @@ var Game = React.createClass({
                 <Header context={this.state.current} messages={this.state.messages} options={this.props.entities.options} openMenu={this.openMenu} />
                 <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} />
                 <Footer />
-                <GameModal onAction={this.doAction} />
+                <GameModal time={this.state.time} onAction={this.doAction} />
                 <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} mode={this.state.mode} />
             </div>
         );
