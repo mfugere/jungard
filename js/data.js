@@ -93,16 +93,18 @@ var objects = [
         ref: "objects/chest1",
         member: "Chest",
         location: "map/real/home",
-        description: "Inside the chest you find some old armor of yours.",
+        description: "It's an old chest!",
         actions: [
             {
                 ref: "objects/leatherarmor",
                 description: "Pick up the leather armor",
+                preview: "Inside the chest you find some armor.",
                 message: "You pick up the armor."
             },
             {
                 ref: "objects/leatherboots",
                 description: "Pick up the leather boots",
+                preview: "There are some boots in here.",
                 message: "You pick up the boots."
             },
             {
