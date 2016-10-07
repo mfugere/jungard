@@ -56,6 +56,7 @@ var objects = [
     {
         ref: "objects/shortsword",
         group: "sword",
+        location: "map/real/home",
         description: "This sword describes my sex life: short, simple, and not very effective.",
         stats: [
             {
@@ -67,6 +68,7 @@ var objects = [
     {
         ref: "objects/leatherarmor",
         group: "leather armor",
+        location: "objects/chest1",
         description: "This is a simple light body and leg armor.",
         stats: [
             {
@@ -78,11 +80,34 @@ var objects = [
     {
         ref: "objects/leatherboots",
         group: "leather armor",
-        description: "This boots are light and provide some defense.",
+        location: "objects/chest1",
+        description: "These boots are light and provide some defense.",
         stats: [
             {
                 key: "Defense",
                 value: 4
+            }
+        ]
+    },
+    {
+        ref: "objects/chest1",
+        member: "Chest",
+        location: "map/real/home",
+        description: "Inside the chest you find some old armor of yours.",
+        actions: [
+            {
+                ref: "objects/leatherarmor",
+                description: "Pick up the leather armor",
+                message: "You pick up the armor."
+            },
+            {
+                ref: "objects/leatherboots",
+                description: "Pick up the leather boots",
+                message: "You pick up the boots."
+            },
+            {
+                ref: "..",
+                description: "Close the chest"
             }
         ]
     }
@@ -144,7 +169,7 @@ var actors = [
                 value: "I don't know what you're thinking, but I ain't up to nothing.",
                 answers: [
                     {
-                        description: "Sorry, just texting this dialog feature.",
+                        description: "Sorry, just testing this dialog feature.",
                         ref: "actors/zopha/dialog/1"
                     }
                 ]
@@ -295,6 +320,17 @@ var map = [
                 preview: "Your bed looks inviting.",
                 description: "Go to bed",
                 message: "You wake up, feeling rested."
+            },
+            {
+                ref: "objects/shortsword",
+                preview: "Your trusty shortsword is hanging on the wall.",
+                description: "Pick up sword",
+                message: "You pick up the sword."
+            },
+            {
+                ref: "objects/chest1",
+                preview: "A dusty old chest is pushed up against your bed.",
+                description: "Open the chest"
             },
             {
                 ref: "map/real/kaeliase",

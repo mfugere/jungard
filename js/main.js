@@ -290,29 +290,29 @@ var Game = React.createClass({
             time: 6.0,
             map: this.props.entities.map,
             actors: this.props.entities.actors,
+            objects: this.props.entities.objects,
             player: {
                 name: "",
                 hp: 0, mp: 0, fp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
                 level: 1, exp: 0, skillPoints: 0, chp: 0, cmp: 0, cfp: 0, ccrg: 0,
-                weapon: getMemberByRef(this.props.entities.objects, "objects/shortsword"),
-                armor: [
-                    getMemberByRef(this.props.entities.objects, "objects/leatherarmor"),
-                    getMemberByRef(this.props.entities.objects, "objects/leatherboots")
-                ],
-                activeStatus: [],
+                inventory: [], weapon: [], armor: [], activeStatus: [],
                 ac: function (modifiers) {
                     var totalAc = this.dex + (modifiers["dex"] || 0);
-                    for (var i in this.armor) {
-                        for (var j in this.armor[i].stats) {
-                            if (this.armor[i].stats[j].key === "Defense") totalAc += this.armor[i].stats[j].value;
+                    if (this.armor.length > 0) {
+                        for (var i in this.armor) {
+                            for (var j in this.armor[i].stats) {
+                                if (this.armor[i].stats[j].key === "Defense") totalAc += this.armor[i].stats[j].value;
+                            }
                         }
                     }
                     return totalAc;
                 },
                 attackRoll: function () {
-                    for (var i in this.weapon.stats) {
-                        if (this.weapon.stats[i].key === "Attack") return this.weapon.stats[i].value;
-                    }
+                    if (this.weapon.length > 0) {
+                        for (var i in this.weapon.stats) {
+                            if (this.weapon.stats[i].key === "Attack") return this.weapon.stats[i].value;
+                        }
+                    } else return 2;
                 }
             },
             current: this.props.entities.map[0],
@@ -451,7 +451,7 @@ var Game = React.createClass({
                             this.openMenu("Player");
                         });
                     }
-                    this.kill(this.state.current.ref);
+                    this.kill(this.state.current.ref, this.state.current.location);
                     this.setState({ player: player, current: getMemberByRef(this.state.map, target.location), battling: false });
                     break;
                 default:
@@ -468,33 +468,42 @@ var Game = React.createClass({
             var splitRef = ref.split("/");
             var newMessages = (prevMessage) ? [ prevMessage ] : [];
             var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
-            if (next.ref.indexOf("dream") !== -1) {
-                if (this.state.current.ref.indexOf("real") !== -1) {
-                    player.chp = player.hp;
-                    player.cmp = player.mp;
-                    player.cfp = player.fp;
-                    player.timeOfSleep = this.state.time;
-                    player.activeStatus.splice(player.activeStatus.indexOf("fatigued"), 1);
-                } else if (timeDifference(this.state.time, player.timeOfSleep) >= 8 || player.ccrg <= 0) {
-                    player.cfp = player.ccrg + (player.fp / 2);
-                    if (player.cfp > player.fp) player.cfp = player.fp;
-                    next = getMemberByRef(this.props.entities.map, "map/real/home");
-                    newMessages.push("You wake up.");
+            if (!next.actions) {
+                player.inventory.push(ref);
+                this.kill(ref, next.location);
+                this.setState({ messages: newMessages, player: player });
+            } else {
+                if (next.ref.indexOf("dream") !== -1) {
+                    if (this.state.current.ref.indexOf("real") !== -1) {
+                        player.chp = player.hp;
+                        player.cmp = player.mp;
+                        player.cfp = player.fp;
+                        player.timeOfSleep = this.state.time;
+                        player.activeStatus.splice(player.activeStatus.indexOf("fatigued"), 1);
+                    } else if (timeDifference(this.state.time, player.timeOfSleep) >= 8 || player.ccrg <= 0) {
+                        player.cfp = player.ccrg + (player.fp / 2);
+                        if (player.cfp > player.fp) player.cfp = player.fp;
+                        next = getMemberByRef(this.props.entities.map, "map/real/home");
+                        newMessages.push("You wake up.");
+                    }
                 }
+                this.setState({ current: next, messages: newMessages, player: player });
             }
-            this.setState({ current: next, messages: newMessages, player: player });
         }
         if (nextAction) (nextAction === "battle/enemy") ? this.enemyTurn(target) : this.doAction(nextAction);
     },
-    kill: function (ref) {
-        var map = this.props.entities.map;
-        for (var i in map) {
-            var actions = map[i].actions;
+    kill: function (ref, location) {
+        var tableName = location.split("/")[0];
+        var table = this.state[tableName];
+        for (var i in table) {
+            var actions = table[i].actions;
             for (var j in actions) {
                 if (actions[j].ref === ref) delete actions[j];
-                this.setState({ map: map });
             }
         }
+        var updates = {};
+        updates[tableName] = table;
+        this.setState(updates);
     },
     showMessage: function (table, key, values) {
         var property = this.state.current[table][key];
@@ -547,6 +556,7 @@ var Game = React.createClass({
         $("#" + modalName + "Modal").modal({ backdrop: "static", keyboard: false });
     },
     render: function () {
+        console.log(this.state.player.inventory);
         var actions = this.state.current.actions;
         if (this.state.battling) actions = this.props.entities.battle
         else if (this.state.dialog) actions = this.state.dialog;
