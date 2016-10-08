@@ -177,6 +177,72 @@ var PlayerModal = React.createClass({
     }
 });
 
+var InventoryModal = React.createClass({
+    getInitialState: function () {
+        return { inventory: [] };
+    },
+    componentWillReceiveProps: function () {
+        var detailedInventory = [];
+        for (var i in this.props.player.inventory) {
+            detailedInventory.push(getMemberByRef(this.props.objects, this.props.player.inventory[i]));
+        }
+        this.setState({ inventory: sortBy(detailedInventory, [ "group", "member" ]) });
+    },
+    equip: function (item) {
+        var player = this.props.player;
+        player.equipment[item.slot] = item;
+        this.props.updatePlayer({ equipment: player.equipment });
+    },
+    unequip: function (slot) {
+        var player = this.props.player;
+        delete player.equipment[slot];
+        this.props.updatePlayer({ equipment: player.equipment });
+    },
+    useItem: function (item) {
+        // TODO
+    },
+    render: function () {
+        var inventoryUI = this.state.inventory.map(function (item, i) {
+            var stripeClass = (i % 2 === 0) ? "evens" : "odds";
+            var itemAction;
+            if (item.group === "equipment") {
+                itemAction = (this.props.player.equipment[item.slot] &&
+                    this.props.player.equipment[item.slot].ref === item.ref) ?
+                    (<button className="btn btn-primary btn-xs" onClick={this.unequip.bind(this, item.slot)}>Unequip</button>) :
+                    (<button className="btn btn-default btn-xs" onClick={this.equip.bind(this, item)}>Equip</button>);
+            } else if (item.group === "items") {
+                itemAction = (<button className="btn btn-default btn-xs" onClick={this.useItem.bind(this, item)}>Use</button>);
+            }
+            return (
+                <div key={"invKey" + i} className={stripeClass + " row"}>
+                    <span className="col-xs-4"><b>{item.member}</b></span>
+                    <span className="col-xs-8">{itemAction}</span>
+                </div>
+            );
+        }, this);
+        return (
+            <div id="inventoryModal" className="modal fade">
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <button type="button" className="close" data-dismiss="modal"><span>&times;</span></button>
+                        <div className="modal-header">
+                            <h4 className="modal-title">Your Inventory</h4>
+                        </div>
+                        <div className="modal-body">
+                            {inventoryUI}
+                        </div>
+                        <div className="modal-footer">
+                            <div className="pull-right">
+                                <button className="btn btn-primary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+});
+
 var MenuBar = React.createClass({
     openMenu: function (name) {
         this.props.openMenu(name);
@@ -295,24 +361,19 @@ var Game = React.createClass({
                 name: "",
                 hp: 0, mp: 0, fp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
                 level: 1, exp: 0, skillPoints: 0, chp: 0, cmp: 0, cfp: 0, ccrg: 0,
-                inventory: [], weapon: [], armor: [], activeStatus: [],
+                inventory: [], equipment: {}, activeStatus: [],
                 ac: function (modifiers) {
                     var totalAc = this.dex + (modifiers["dex"] || 0);
-                    if (this.armor.length > 0) {
-                        for (var i in this.armor) {
-                            for (var j in this.armor[i].stats) {
-                                if (this.armor[i].stats[j].key === "Defense") totalAc += this.armor[i].stats[j].value;
-                            }
+                    var objKeys = Object.keys(this.equipment);
+                    if (objKeys.length > 0) {
+                        for (var i in objKeys) {
+                            totalAc += this.equipment[objKeys[i]].stats["ac"] || 0;
                         }
                     }
                     return totalAc;
                 },
                 attackRoll: function () {
-                    if (this.weapon.length > 0) {
-                        for (var i in this.weapon.stats) {
-                            if (this.weapon.stats[i].key === "Attack") return this.weapon.stats[i].value;
-                        }
-                    } else return 2;
+                    return (this.equipment["weapon"]) ? this.equipment["weapon"].stats["att"] : 2;
                 }
             },
             current: this.props.entities.map[0],
@@ -383,7 +444,7 @@ var Game = React.createClass({
             }
         }
         if (player.chp <= 0) {
-            var realOrDream = (this.state.current.ref.indexOf("real") === -1) ? "dream" : "real";
+            var realOrDream = (this.state.current.location.indexOf("real") === -1) ? "dream" : "real";
             player.chp = player.hp;
             this.setState({ battling: false, player: player }, function () {
                 this.doAction("map/" + realOrDream + "/death");
@@ -556,7 +617,6 @@ var Game = React.createClass({
         $("#" + modalName + "Modal").modal({ backdrop: "static", keyboard: false });
     },
     render: function () {
-        console.log(this.state.player.inventory);
         var actions = this.state.current.actions;
         if (this.state.battling) actions = this.props.entities.battle
         else if (this.state.dialog) actions = this.state.dialog;
@@ -567,6 +627,7 @@ var Game = React.createClass({
                 <Footer />
                 <GameModal time={this.state.time} onAction={this.doAction} />
                 <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} mode={this.state.mode} />
+                <InventoryModal objects={this.state.objects} player={this.state.player} updatePlayer={this.updatePlayer} />
             </div>
         );
     }

@@ -55,39 +55,45 @@ var statusEffects = [
 var objects = [
     {
         ref: "objects/shortsword",
-        group: "sword",
+        group: "equipment",
+        slot: "weapon",
+        member: "Shortsword",
         location: "map/real/home",
         description: "This sword describes my sex life: short, simple, and not very effective.",
-        stats: [
-            {
-                key: "Attack",
-                value: 6
-            }
-        ]
+        stats: {
+            att: 6
+        }
     },
     {
         ref: "objects/leatherarmor",
-        group: "leather armor",
+        group: "equipment",
+        slot: "body",
+        member: "Leather armor",
         location: "objects/chest1",
         description: "This is a simple light body and leg armor.",
-        stats: [
-            {
-                key: "Defense",
-                value: 8
-            }
-        ]
+        stats: {
+            ac: 8
+        }
     },
     {
         ref: "objects/leatherboots",
-        group: "leather armor",
+        group: "equipment",
+        slot: "feet",
+        member: "Leather boots",
         location: "objects/chest1",
         description: "These boots are light and provide some defense.",
-        stats: [
-            {
-                key: "Defense",
-                value: 4
-            }
-        ]
+        stats: {
+            ac: 4
+        }
+    },
+    {
+        ref: "objects/healthpotion",
+        group: "items",
+        member: "Health potion",
+        description: "This potion restores some health.",
+        effects: {
+            hp: 10
+        }
     },
     {
         ref: "objects/chest1",

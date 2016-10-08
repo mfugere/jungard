@@ -26,3 +26,13 @@ var timeDifference = function (t1, t2) {
         return 24 - t2 + t1;
     } else return t1 - t2;
 };
+
+var sortBy = function (arr, args) {
+    var result = arr;
+    for (var i in args) {
+        result.sort(function (a, b) {
+            return (a[args[i]] < b[args[i]]) ? -1 : ((a[args[i]] === b[args[i]]) ? 0 : 1);
+        });
+    }
+    return result;
+};
