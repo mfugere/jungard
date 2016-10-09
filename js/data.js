@@ -62,7 +62,8 @@ var objects = [
         description: "This sword describes my sex life: short, simple, and not very effective.",
         stats: {
             att: 6
-        }
+        },
+        cost: 20
     },
     {
         ref: "objects/leatherarmor",
@@ -73,7 +74,8 @@ var objects = [
         description: "This is a simple light body and leg armor.",
         stats: {
             ac: 8
-        }
+        },
+        cost: 15
     },
     {
         ref: "objects/leatherboots",
@@ -84,7 +86,8 @@ var objects = [
         description: "These boots are light and provide some defense.",
         stats: {
             ac: 4
-        }
+        },
+        cost: 10
     },
     {
         ref: "objects/healthpotion",
@@ -92,8 +95,9 @@ var objects = [
         member: "Health potion",
         description: "This potion restores some health.",
         effects: {
-            hp: 10
-        }
+            chp: 10
+        },
+        cost: 10
     },
     {
         ref: "objects/chest1",
@@ -153,9 +157,27 @@ var actors = [
         location: "map/real/kaeliagoods",
         dialog: [
             {
-                value: "Cheers, mate. You'll find whatever you need here, so take a look around!"
+                value: "Cheers, mate. You'll find whatever you need here, so take a look around!",
+                answers: [
+                    {
+                        description: "Buy",
+                        ref: "actors/olis/buy"
+                    },
+                    {
+                        description: "Sell",
+                        ref: "actors/olis/sell"
+                    },
+                    {
+                        description: "I'm done",
+                        ref: "actors/olis/dialog/1"
+                    }
+                ]
+            },
+            {
+                value: "Let me know if there's anything else you need!"
             }
         ],
+        inventory: [ "objects/healthpotion" ],
         actions: [
             {
                 ref: "actors/olis/dialog/0",

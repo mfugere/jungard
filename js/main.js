@@ -91,6 +91,7 @@ var PlayerModal = React.createClass({
                 str: this.state.str, dex: this.state.dex,int: this.state.int,chr: this.state.chr,
                 skillPoints: this.state.skillPoints
             });
+            this.props.updateMode("chr-view");
         }
     },
     render: function () {
@@ -199,7 +200,18 @@ var InventoryModal = React.createClass({
         this.props.updatePlayer({ equipment: player.equipment });
     },
     useItem: function (item) {
-        // TODO
+        var player = this.props.player;
+        var effectKeys = Object.keys(item.effects);
+        var updates = {};
+        for (var i in effectKeys) {
+            player[effectKeys[i]] += item.effects[effectKeys[i]];
+            if (player[effectKeys[i].substring(1)] && player[effectKeys[i]] > player[effectKeys[i].substring(1)])
+                player[effectKeys[i]] = player[effectKeys[i].substring(1)];
+            updates[effectKeys[i]] = player[effectKeys[i]];
+        }
+        player.inventory.splice(player.inventory.indexOf(item.ref), 1);
+        updates["inventory"] = player.inventory;
+        this.props.updatePlayer(updates);
     },
     render: function () {
         var inventoryUI = this.state.inventory.map(function (item, i) {
@@ -230,6 +242,10 @@ var InventoryModal = React.createClass({
                         </div>
                         <div className="modal-body">
                             {inventoryUI}
+                            <div className="row">
+                                <span className="col-xs-4"><b>Gold</b></span>
+                                <span className="col-xs-8">{this.props.player.gold}</span>
+                            </div>
                         </div>
                         <div className="modal-footer">
                             <div className="pull-right">
@@ -307,9 +323,12 @@ var Actions = React.createClass({
         if (ref.indexOf(this.props.context.ref) !== -1) {
             if (ref.indexOf("battle") !== -1) this.props.battle();
             else {
-                var message = ref.replace(this.props.context.ref, "").substring(1);
-                var messageSet = message.split("/");
-                this.props.showMessage(messageSet[0], parseInt(messageSet[messageSet.length - 1]));
+                this.props.shop(ref);
+                if (ref.indexOf("dialog") !== -1) {
+                    var message = ref.replace(this.props.context.ref, "").substring(1);
+                    var messageSet = message.split("/");
+                    this.props.showMessage(messageSet[0], parseInt(messageSet[messageSet.length - 1]));
+                }
             }
         }
         else {
@@ -354,11 +373,9 @@ var Game = React.createClass({
     getInitialState: function () {
         return {
             time: 6.0,
-            map: this.props.entities.map,
-            actors: this.props.entities.actors,
-            objects: this.props.entities.objects,
+            map: this.props.entities.map, actors: this.props.entities.actors, objects: this.props.entities.objects,
             player: {
-                name: "",
+                name: "", gold: 30,
                 hp: 0, mp: 0, fp: 0, crg: 0, str: 0, dex: 0, chr: 0, int: 0,
                 level: 1, exp: 0, skillPoints: 0, chp: 0, cmp: 0, cfp: 0, ccrg: 0,
                 inventory: [], equipment: {}, activeStatus: [],
@@ -378,8 +395,7 @@ var Game = React.createClass({
             },
             current: this.props.entities.map[0],
             messages: [],
-            mode: "chr-view",
-            battling: false
+            mode: "chr-view", battling: false, transaction: ""
         };
     },
     componentWillMount: function () {
@@ -421,7 +437,10 @@ var Game = React.createClass({
                 player[key] = updates[key];
             }
         }
-        this.setState({ player: player, mode: "chr-view" });
+        this.setState({ player: player });
+    },
+    updateMode: function (modeName) {
+        this.setState({ mode: modeName });
     },
     enemyTurn: function (enemy) {
         var hitStatus = "";
@@ -530,9 +549,22 @@ var Game = React.createClass({
             var newMessages = (prevMessage) ? [ prevMessage ] : [];
             var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
             if (!next.actions) {
-                player.inventory.push(ref);
-                this.kill(ref, next.location);
-                this.setState({ messages: newMessages, player: player });
+                if (this.state.transaction !== "sell") {
+                    if (this.state.transaction === "buy" && next.cost > player.gold) {
+                        newMessages.push("You can't afford it.");
+                    } else {
+                        player.inventory.push(ref);
+                        if (this.state.transaction === "buy") player.gold -= next.cost;
+                        else this.kill(ref, next.location);
+                    } 
+                    this.setState({ messages: newMessages, player: player });
+                } else {
+                    if (player.equipment[next.slot] && player.equipment[next.slot].ref === ref)
+                        delete player.equipment[next.slot];
+                    player.inventory.splice(player.inventory.indexOf(ref), 1);
+                    player.gold += next.cost;
+                    this.setState({ player: player });
+                }
             } else {
                 if (next.ref.indexOf("dream") !== -1) {
                     if (this.state.current.ref.indexOf("real") !== -1) {
@@ -612,21 +644,36 @@ var Game = React.createClass({
             if (tInit > pInit) this.enemyTurn(this.state.current);
         });
     },
+    shop: function (ref) {
+        var splitRef = ref.split("/");
+        if (ref.indexOf("buy") !== -1 || ref.indexOf("sell") !== -1)
+            this.setState({ transaction: splitRef[splitRef.length - 1] });
+        else this.setState({ transaction: "" });
+    },
     openMenu: function (name) {
         var modalName = name.toLowerCase();
         $("#" + modalName + "Modal").modal({ backdrop: "static", keyboard: false });
     },
     render: function () {
         var actions = this.state.current.actions;
-        if (this.state.battling) actions = this.props.entities.battle
+        if (this.state.battling) actions = this.props.entities.battle;
+        else if (this.state.transaction.length > 0) {
+            actions = [];
+            var invArr = (this.state.transaction === "sell") ? this.state.player.inventory : this.state.current.inventory;
+            for (var i in invArr) {
+                var itemObj = getMemberByRef(this.state.objects, invArr[i]);
+                actions.push({ ref: itemObj.ref, description: itemObj.member + ": " + itemObj.cost + "g" });
+            }
+            actions.push({ ref: this.state.current.ref + "/dialog/0", description: "Done" });
+        }
         else if (this.state.dialog) actions = this.state.dialog;
         return (
             <div>
                 <Header context={this.state.current} messages={this.state.messages} options={this.props.entities.options} openMenu={this.openMenu} />
-                <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} />
+                <Actions context={this.state.current} actions={actions} onAction={this.doAction} showMessage={this.showMessage} battle={this.battle} shop={this.shop} />
                 <Footer />
                 <GameModal time={this.state.time} onAction={this.doAction} />
-                <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} mode={this.state.mode} />
+                <PlayerModal player={this.state.player} updatePlayer={this.updatePlayer} mode={this.state.mode} updateMode={this.updateMode} />
                 <InventoryModal objects={this.state.objects} player={this.state.player} updatePlayer={this.updatePlayer} />
             </div>
         );
