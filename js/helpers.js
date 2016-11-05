@@ -36,3 +36,14 @@ var sortBy = function (arr, args) {
     }
     return result;
 };
+
+var checkDupes = function (el, i, arr) {
+    var testArr = arr;
+    var count = 0;
+    do {
+        count += 1;
+        testArr.splice(i, 1);
+    } while (testArr.indexOf(el[this]) !== -1);
+    el["qty"] = count;
+    return count === 1;
+};

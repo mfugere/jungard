@@ -184,8 +184,15 @@ var InventoryModal = React.createClass({
     },
     componentWillReceiveProps: function () {
         var detailedInventory = [];
-        for (var i in this.props.player.inventory) {
-            detailedInventory.push(getMemberByRef(this.props.objects, this.props.player.inventory[i]));
+        var sorted = this.props.player.inventory.sort();
+        var curCount = 1;
+        for (var i = 0; i < sorted.length; i++) {
+            if (!sorted[i + 1] || sorted[i] !== sorted[i + 1]) {
+                var member = getMemberByRef(this.props.objects, sorted[i]);
+                member.qty = curCount;
+                detailedInventory.push(member);
+                curCount = 1;
+            } else curCount += 1;
         }
         this.setState({ inventory: sortBy(detailedInventory, [ "group", "member" ]) });
     },
@@ -228,7 +235,8 @@ var InventoryModal = React.createClass({
             return (
                 <div key={"invKey" + i} className={stripeClass + " row"}>
                     <span className="col-xs-4"><b>{item.member}</b></span>
-                    <span className="col-xs-8">{itemAction}</span>
+                    <span className="col-xs-2">{"x" + item.qty}</span>
+                    <span className="col-xs-6">{itemAction}</span>
                 </div>
             );
         }, this);
@@ -319,7 +327,7 @@ var Header = React.createClass({
 
 var Actions = React.createClass({
     handleAction: function (ref, actionMessage) {
-        if (ref === "..") ref = this.props.context.location;
+        if (ref === "..") ref = this.props.context.location[this.props.context.locIdx];
         if (ref.indexOf(this.props.context.ref) !== -1) {
             if (ref.indexOf("battle") !== -1) this.props.battle();
             else {
@@ -463,7 +471,7 @@ var Game = React.createClass({
             }
         }
         if (player.chp <= 0) {
-            var realOrDream = (this.state.current.location.indexOf("real") === -1) ? "dream" : "real";
+            var realOrDream = (this.state.current.location[this.state.current.locIdx].indexOf("real") === -1) ? "dream" : "real";
             player.chp = player.hp;
             this.setState({ battling: false, player: player }, function () {
                 this.doAction("map/" + realOrDream + "/death");
@@ -514,7 +522,7 @@ var Game = React.createClass({
                     this.setState({ player: player });
                     break;
                 case "battle/flee":
-                    this.setState({ current: getMemberByRef(this.state.map, target.location), battling: false });
+                    this.setState({ current: getMemberByRef(this.state.map, target.location[target.locIdx]), battling: false });
                     messages.push(actionMessage);
                     break;
                 case "battle/win":
@@ -531,8 +539,12 @@ var Game = React.createClass({
                             this.openMenu("Player");
                         });
                     }
-                    this.kill(this.state.current.ref, this.state.current.location);
-                    this.setState({ player: player, current: getMemberByRef(this.state.map, target.location), battling: false });
+                    this.kill(this.state.current.ref, this.state.current.location[this.state.current.locIdx]);
+                    this.setState({
+                        player: player,
+                        current: getMemberByRef(this.state.map, target.location[target.locIdx]),
+                        battling: false
+                    });
                     break;
                 default:
                     break;
@@ -548,6 +560,7 @@ var Game = React.createClass({
             var splitRef = ref.split("/");
             var newMessages = (prevMessage) ? [ prevMessage ] : [];
             var next = getMemberByRef(this.props.entities[ref.split("/")[0]], ref);
+            if (next.location) next.locIdx = next.location.indexOf(this.state.current.ref);
             if (!next.actions) {
                 if (this.state.transaction !== "sell") {
                     if (this.state.transaction === "buy" && next.cost > player.gold) {
@@ -555,7 +568,7 @@ var Game = React.createClass({
                     } else {
                         player.inventory.push(ref);
                         if (this.state.transaction === "buy") player.gold -= next.cost;
-                        else this.kill(ref, next.location);
+                        else this.kill(ref, next.location[next.locIdx]);
                     } 
                     this.setState({ messages: newMessages, player: player });
                 } else {

@@ -58,7 +58,7 @@ var objects = [
         group: "equipment",
         slot: "weapon",
         member: "Shortsword",
-        location: "map/real/home",
+        location: [ "map/real/home" ],
         description: "This sword describes my sex life: short, simple, and not very effective.",
         stats: {
             att: 6
@@ -70,7 +70,7 @@ var objects = [
         group: "equipment",
         slot: "body",
         member: "Leather armor",
-        location: "objects/chest1",
+        location: [ "objects/chest1" ],
         description: "This is a simple light body and leg armor.",
         stats: {
             ac: 8
@@ -82,7 +82,7 @@ var objects = [
         group: "equipment",
         slot: "feet",
         member: "Leather boots",
-        location: "objects/chest1",
+        location: [ "objects/chest1" ],
         description: "These boots are light and provide some defense.",
         stats: {
             ac: 4
@@ -102,7 +102,7 @@ var objects = [
     {
         ref: "objects/chest1",
         member: "Chest",
-        location: "map/real/home",
+        location: [ "map/real/home" ],
         description: "It's an old chest!",
         actions: [
             {
@@ -130,7 +130,7 @@ var actors = [
         ref: "actors/eannon",
         member: "Eannon",
         description: "The bartender of the Chamomile Arms is busy polishing glasses, as one would expect.",
-        location: "map/real/chamomilearms",
+        location: [ "map/real/chamomilearms" ],
         dialog: [
             {
                 value: "Good to see you again, {0}. Take a seat anywhere.",
@@ -154,7 +154,7 @@ var actors = [
         ref: "actors/olis",
         member: "Olis",
         description: "The shopkeep smiles at you as you enter. He appears to have a shiny silver tooth.",
-        location: "map/real/kaeliagoods",
+        location: [ "map/real/kaeliagoods" ],
         dialog: [
             {
                 value: "Cheers, mate. You'll find whatever you need here, so take a look around!",
@@ -193,7 +193,7 @@ var actors = [
         ref: "actors/zopha",
         member: "Zopha",
         description: "A shady-looking woman is leaning up against a house, glaring at passers by.",
-        location: "map/real/kaeliasw",
+        location: [ "map/real/kaeliasw" ],
         dialog: [
             {
                 value: "I don't know what you're thinking, but I ain't up to nothing.",
@@ -223,7 +223,7 @@ var actors = [
         ref: "actors/junia",
         group: "Junia",
         description: "You notice a girl pacing by the town wall, seemingly waiting for someone.",
-        location: "map/real/kaeliase",
+        location: [ "map/real/kaeliase" ],
         dialog: [
             {
                 value: "Mind your own business, please."
@@ -244,7 +244,7 @@ var actors = [
         ref: "actors/felsie",
         member: "Felsie",
         description: "A local sellsword, Felsie, is at the grindstone, sharpening her blade.",
-        location: "map/real/kaeliane",
+        location: [ "map/real/kaeliane" ],
         dialog: [
             {
                 value: "Hey there, {0}. Fancy a duel?",
@@ -268,7 +268,7 @@ var actors = [
         ref: "actors/snail",
         member: "Snail",
         description: "A snail is crawling about.",
-        location: "map/real/lakelullabyne",
+        location: [ "map/real/lakelullabyne" ],
         battle: {
             hp: 10,
             str: 4,
@@ -291,7 +291,7 @@ var actors = [
         ref: "actors/spider",
         member: "Spider",
         description: "A spider is crawling about.",
-        location: "map/dream/lakelullabyne",
+        location: [ "map/dream/lakelullabyne" ],
         battle: {
             hp: 10,
             str: 4,
